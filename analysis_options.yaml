@@ -1,0 +1,14 @@
+analyzer:
+  exclude:
+    - "build/**"
+    - ".dart_tool/**"
+    - "android/**"
+    - "ios/**"
+    - "windows/**"
+    - "**/*.g.dart"
+
+linter:
+  rules:
+    - avoid_print
+    - use_build_context_synchronously
+    - prefer_const_constructors

@@ -1,0 +1,4 @@
+lib\screens\explore_screen.dart:261 has both
+lib\screens\login_screen.dart:528 has both
+lib\widgets\trip_card.dart:82 has both
+lib\widgets\trip_card.dart:242 has both

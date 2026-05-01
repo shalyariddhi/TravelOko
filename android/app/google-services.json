@@ -1,0 +1,62 @@
+{
+  "project_info": {
+    "project_number": "675905775251",
+    "project_id": "travel-loco-2b778",
+    "storage_bucket": "travel-loco-2b778.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:675905775251:android:9af01c2742cc16bc77cf66",
+        "android_client_info": {
+          "package_name": "com.example.travel_loco"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "675905775251-q0iru53gmve98kqk2doi7ev4qkrt9t2j.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.travel_loco",
+            "certificate_hash": "4b9c577f7a69862a84561ae46aa18eded98fd526"
+          }
+        },
+        {
+          "client_id": "675905775251-ub8iposb9kbvpmslc0r1peaahh71l46r.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.travel_loco",
+            "certificate_hash": "84c1a986523218807c55867ded83cc5a28d28c72"
+          }
+        },
+        {
+          "client_id": "675905775251-afn5ce9u8jidnv8o59n91m77rq4aopkp.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCcfaN3h5tINVJP8wSa0GiZJdcrCNEF_6A"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "675905775251-afn5ce9u8jidnv8o59n91m77rq4aopkp.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "675905775251-t7rqu9pqpdjts7bvqdctcj53tlo5mh52.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.travelLoco"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

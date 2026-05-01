@@ -1,0 +1,163 @@
+lib\screens\explore_screen.dart: color and decoration
+color: Colors.grey[600])),
+                  const SizedBox(height: 14),
+                  // Search bar
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.05),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4))
+                      ],
+                    ),
+                    child: TextField(
+                      controller: _searchController,
+                      onChanged: _onSearchChanged,
+                      decoration:
+-----
+lib\screens\explore_screen.dart: color and decoration
+color: Colors.grey[600], fontSize: 12),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                  const SizedBox(height: 6),
+                  // Stats row
+                  Row(
+                    children: [
+                      _userStat(Icons.luggage_outlined,
+                          '${user.tripsCount} trips'),
+                      const SizedBox(width: 12),
+                      _userStat(Icons.people_outline,
+                          '${user.followersCount} followers'),
+                      const SizedBox(width: 12),
+                      // Trust score badge
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 2),
+                        decoration:
+-----
+lib\screens\login_screen.dart: color and decoration
+color: Colors.white60, fontSize: 14),
+                        ).animate().fadeIn(duration: 700.ms, delay: 100.ms),
+
+                        const SizedBox(height: 28),
+
+                        //  Login / Signup toggle tabs 
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          child: Row(
+                            children: [
+                              _buildTab('Log In', isSelected: _isLogin,
+                                  onTap: () =>
+                                      setState(() => _isLogin = true)),
+                              _buildTab('Sign Up', isSelected: !_isLogin,
+                                  onTap: () =>
+                                      setState(() => _isLogin = false)),
+                            ],
+                          ),
+                        ).animate().fadeIn(duration: 600.ms, delay: 200.ms),
+
+                        const SizedBox(height: 20),
+
+                        //  Email field 
+                        _buildInputField(
+                          controller: _emailController,
+                          hint: 'Email address',
+                          icon: Icons.email_outlined,
+                        ).animate().fadeIn(duration: 500.ms, delay: 300.ms),
+
+                        const SizedBox(height: 14),
+
+                        //  Password field 
+                        _buildInputField(
+                          controller: _passwordController,
+                          hint: 'Password',
+                          icon: Icons.lock_outline,
+                          isPassword: true,
+                          obscure: _obscurePassword,
+                          onToggleObscure: () => setState(
+                              () => _obscurePassword = !_obscurePassword),
+                        ).animate().fadeIn(duration: 500.ms, delay: 380.ms),
+
+                        const SizedBox(height: 22),
+
+                        //  Submit button 
+                        SizedBox(
+                          width: double.infinity,
+                          height: 54,
+                          child: ElevatedButton(
+                            onPressed:
+                                _isLoading ? null : _submitEmailPassword,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.amber,
+                              foregroundColor: Colors.black87,
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16)),
+                              elevation: 0,
+                            ),
+                            child: _isLoading
+                                ? const SizedBox(
+                                    height: 22,
+                                    width: 22,
+                                    child: CircularProgressIndicator(
+                                        color: Colors.black54,
+                                        strokeWidth: 2.5),
+                                  )
+                                : Text(
+                                    _isLogin ? 'Log In' : 'Create Account',
+                                    style: GoogleFonts.poppins(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                          ),
+                        ).animate().fadeIn(duration: 500.ms, delay: 450.ms),
+
+                        const SizedBox(height: 20),
+
+                        //  OR divider 
+                        Row(
+                          children: [
+                            const Expanded(
+                                child: Divider(
+                                    color: Colors.white24, thickness: 1)),
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 12),
+                              child: Text('OR',
+                                  style: GoogleFonts.poppins(
+                                      color: Colors.white38, fontSize: 12)),
+                            ),
+                            const Expanded(
+                                child: Divider(
+                                    color: Colors.white24, thickness: 1)),
+                          ],
+                        ).animate().fadeIn(duration: 400.ms, delay: 500.ms),
+
+                        const SizedBox(height: 16),
+
+                        //  Google button 
+                        GestureDetector(
+                          onTap: _isGoogleLoading ? null : _signInWithGoogle,
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(vertical: 15),
+                            decoration:
+-----
+lib\screens\profile_screen.dart: decoration and color
+decoration: BoxDecoration(borderRadius: BorderRadius.circular(15))),
+            ),
+            const SizedBox(height: 20),
+            Shimmer.fromColors(
+              baseColor: Colors.grey[300]!,
+              highlightColor: Colors.grey[100]!,
+              child: Container(width: double.infinity, height: 300, color:
+-----
