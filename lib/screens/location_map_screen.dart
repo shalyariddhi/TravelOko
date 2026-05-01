@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../data/mock_data.dart';
 import 'accommodations_screen.dart';
+import 'map_intro_screen.dart';
 
 class LocationMapScreen extends StatefulWidget {
   final Map<String, dynamic> locationData;
@@ -71,6 +72,9 @@ class _LocationMapScreenState extends State<LocationMapScreen> {
                     width: double.infinity,
                     height: double.infinity,
                     fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      width: double.infinity, height: double.infinity, color: Colors.blueGrey[900],
+                    ),
                   ),
                   // Dark gradient overlay
                   Container(
@@ -200,6 +204,39 @@ class _LocationMapScreenState extends State<LocationMapScreen> {
                           'Discover the best spots, hidden gems, and top stays in this amazing destination.',
                           style: GoogleFonts.poppins(color: Colors.grey[400], fontSize: 14),
                         ),
+                        const SizedBox(height: 24),
+
+                        // Plan a Trip Action Button
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.push(context, MaterialPageRoute(builder: (_) => const MapIntroScreen()));
+                          },
+                          child: Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [Colors.amber[700]!, Colors.amber[400]!],
+                              ),
+                              borderRadius: BorderRadius.circular(16),
+                              boxShadow: [
+                                BoxShadow(color: Colors.amber.withValues(alpha: 0.3), blurRadius: 12, offset: const Offset(0, 4)),
+                              ],
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.edit_calendar_rounded, color: Colors.black87),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Plan a Custom Trip Here',
+                                  style: GoogleFonts.poppins(color: Colors.black87, fontWeight: FontWeight.bold, fontSize: 16),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ).animate().scaleXY(begin: 0.9, end: 1.0, duration: 500.ms, curve: Curves.easeOutBack),
+                        
                         const SizedBox(height: 30),
 
                         // Nearby Places Section
@@ -227,6 +264,7 @@ class _LocationMapScreenState extends State<LocationMapScreen> {
                                     image: NetworkImage(place['image']!),
                                     fit: BoxFit.cover,
                                     colorFilter: ColorFilter.mode(Colors.black.withValues(alpha: 0.3), BlendMode.darken),
+                                    onError: (error, stackTrace) {}, // Ignore errors and just show background
                                   ),
                                 ),
                                 alignment: Alignment.bottomLeft,
@@ -285,6 +323,10 @@ class _LocationMapScreenState extends State<LocationMapScreen> {
               width: 120,
               height: 120,
               fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) => Container(
+                width: 120, height: 120, color: Colors.grey[800],
+                child: const Icon(Icons.hotel, color: Colors.grey),
+              ),
             ),
           ),
           const SizedBox(width: 16),

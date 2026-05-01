@@ -281,7 +281,7 @@ class MockData {
       'price': '₹5,800',
       'rating': 4.7,
       'reviews': 215,
-      'image': 'https://images.unsplash.com/photo-1502672260266-1c1de2d9d0cb?auto=format&fit=crop&w=800&q=80',
+      'image': 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=800&q=80',
       'amenities': ['City View', 'Gym', 'Workspace', 'Netflix'],
       'badge': '💻 Work & Travel',
       'color': const Color(0xFF4286F4),
