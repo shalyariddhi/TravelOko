@@ -1,1 +1,42 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"travel-loco-2b778","appId":"1:675905775251:android:9af01c2742cc16bc77cf66","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"travel-loco-2b778","configurations":{"android":"1:675905775251:android:9af01c2742cc16bc77cf66","ios":"1:675905775251:ios:226bb897e8dbb41777cf66","macos":"1:675905775251:ios:226bb897e8dbb41777cf66","web":"1:675905775251:web:cbbfa3846727dc8877cf66","windows":"1:675905775251:web:05a34ec17fd245d277cf66"}}}}}}
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "travel-loco-2b778",
+          "appId": "1:675905775251:android:9af01c2742cc16bc77cf66",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "travel-loco-2b778",
+          "configurations": {
+            "android": "1:675905775251:android:9af01c2742cc16bc77cf66",
+            "ios": "1:675905775251:ios:226bb897e8dbb41777cf66",
+            "macos": "1:675905775251:ios:226bb897e8dbb41777cf66",
+            "web": "1:675905775251:web:cbbfa3846727dc8877cf66",
+            "windows": "1:675905775251:web:05a34ec17fd245d277cf66"
+          }
+        }
+      }
+    }
+  },
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default",
+      "disallowLegacyRuntimeConfig": true,
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log",
+        "*.local"
+      ],
+      "predeploy": [
+        "npm --prefix \"$RESOURCE_DIR\" run lint"
+      ]
+    }
+  ]
+}

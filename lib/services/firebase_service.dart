@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import '../models/trip.dart';
 import '../models/app_user.dart';
 import '../models/destination.dart';
@@ -561,15 +561,87 @@ class FirebaseService {
   Future<void> seedDatabase() async {
     try {
       final batch = _firestore.batch();
+      
+      // Seed Trips
       for (var trip in MockData.trips) {
-        // Use a generated document ID
         final docRef = _firestore.collection('trips').doc();
         batch.set(docRef, trip.toMap());
       }
+
+      // Seed Trending Destinations
+      for (var dest in MockData.trendingDestinations) {
+        final docRef = _firestore.collection('locations').doc();
+        batch.set(docRef, {...dest, 'category': 'trending'});
+      }
+
+      // Seed Seasonal Guide
+      for (var dest in MockData.seasonalGuide) {
+        final docRef = _firestore.collection('locations').doc();
+        batch.set(docRef, {...dest, 'category': 'seasonal'});
+      }
+
+      // Seed Hidden Gems
+      for (var dest in MockData.hiddenGems) {
+        final docRef = _firestore.collection('locations').doc();
+        batch.set(docRef, {...dest, 'category': 'hidden'});
+      }
+
+      // Seed Accommodations
+      for (var acc in MockData.accommodations) {
+        final docRef = _firestore.collection('accommodations').doc();
+        final dataToSave = Map<String, dynamic>.from(acc);
+        if (dataToSave.containsKey('color')) {
+          // Store color as integer value
+          dataToSave['colorInt'] = (dataToSave['color'] as Color).value;
+          dataToSave.remove('color');
+        }
+        batch.set(docRef, dataToSave);
+      }
+
       await batch.commit();
       debugPrint('Database seeded successfully');
     } catch (e) {
       debugPrint('Error seeding database: $e');
     }
+  }
+
+  // ─────────────────────────────────────────
+  // LIVE EXPLORE DATA
+  // ─────────────────────────────────────────
+
+  Stream<List<Map<String, dynamic>>> getLocationsByCategory(String category) {
+    return _firestore
+        .collection('locations')
+        .where('category', isEqualTo: category)
+        .snapshots()
+        .map((snap) => snap.docs.map((d) {
+              final data = d.data();
+              data['id'] = d.id;
+              return data;
+            }).toList())
+        .handleError((e) {
+      debugPrint('Error fetching locations ($category): $e');
+      return <Map<String, dynamic>>[];
+    });
+  }
+
+  Stream<List<Map<String, dynamic>>> getAccommodations() {
+    return _firestore
+        .collection('accommodations')
+        .snapshots()
+        .map((snap) => snap.docs.map((d) {
+              final data = d.data();
+              data['id'] = d.id;
+              if (data['colorInt'] != null) {
+                data['color'] = Color(data['colorInt'] as int);
+              } else {
+                data['color'] = const Color(0xFF000000); // fallback
+              }
+              return data;
+            }).toList())
+        .handleError((e) {
+      debugPrint('Error fetching accommodations: $e');
+      return <Map<String, dynamic>>[];
+    });
   }
 }

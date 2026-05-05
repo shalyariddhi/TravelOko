@@ -206,19 +206,19 @@ class MockData {
   static final List<Map<String, String>> trendingDestinations = [
     {'name': 'Goa', 'image': 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=500&q=80'},
     {'name': 'Manali', 'image': 'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=500&q=80'},
-    {'name': 'Udaipur', 'image': 'https://images.unsplash.com/photo-1615836245337-f589db7bd10e?w=500&q=80'},
+    {'name': 'Udaipur', 'image': 'https://picsum.photos/seed/udaipur/500/500'},
     {'name': 'Jaipur', 'image': 'https://images.unsplash.com/photo-1477587458883-47145ed94245?w=500&q=80'},
     {'name': 'Mumbai', 'image': 'https://images.unsplash.com/photo-1529253355930-ddbe423a2ac7?w=500&q=80'},
     {'name': 'Varanasi', 'image': 'https://images.unsplash.com/photo-1561359313-0639aad49ca6?w=500&q=80'},
     {'name': 'Rishikesh', 'image': 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=500&q=80'},
-    {'name': 'Agra', 'image': 'https://images.unsplash.com/photo-1565345242784-b0d366300407?w=500&q=80'},
+    {'name': 'Agra', 'image': 'https://images.unsplash.com/photo-1564507592208-5cb345aeffc2?w=500&q=80'},
   ];
 
   static final List<Map<String, String>> seasonalGuide = [
-    {'name': 'Munnar', 'image': 'https://images.unsplash.com/photo-1593693397690-362cb9666c6c?w=500&q=80'},
+    {'name': 'Munnar', 'image': 'https://picsum.photos/seed/munnar/500/500'},
     {'name': 'Darjeeling', 'image': 'https://images.unsplash.com/photo-1544644181-1484b3fdfc62?w=500&q=80'},
-    {'name': 'Andaman', 'image': 'https://images.unsplash.com/photo-1588628566587-bf5c302cbbf9?w=500&q=80'},
-    {'name': 'Ooty', 'image': 'https://images.unsplash.com/photo-1624806085698-0c65538e14e7?w=500&q=80'},
+    {'name': 'Andaman', 'image': 'https://picsum.photos/seed/andaman/500/500'},
+    {'name': 'Ooty', 'image': 'https://picsum.photos/seed/ooty/500/500'},
     {'name': 'Gulmarg', 'image': 'https://images.unsplash.com/photo-1550184658-ff6132a71714?w=500&q=80'},
     {'name': 'Auli', 'image': 'https://images.unsplash.com/photo-1610640951163-95624ebc6e83?w=500&q=80'},
   ];
@@ -227,9 +227,9 @@ class MockData {
     {'name': 'Spiti Valley', 'image': 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=500&q=80'},
     {'name': 'Meghalaya', 'image': 'https://images.unsplash.com/photo-1590050752117-238cb0fb12b1?w=500&q=80'},
     {'name': 'Gokarna', 'image': 'https://images.unsplash.com/photo-1561501878-aabd62634533?w=500&q=80'},
-    {'name': 'Ziro Valley', 'image': 'https://images.unsplash.com/photo-1621644788319-335dc1ea8b0d?w=500&q=80'},
+    {'name': 'Ziro Valley', 'image': 'https://picsum.photos/seed/ziro/500/500'},
     {'name': 'Majuli', 'image': 'https://images.unsplash.com/photo-1614704043997-7e6d1eb2f01f?w=500&q=80'},
-    {'name': 'Tawang', 'image': 'https://images.unsplash.com/photo-1625642593671-0428587376c6?w=500&q=80'},
+    {'name': 'Tawang', 'image': 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=500&q=80'},
     {'name': 'Khajjiar', 'image': 'https://images.unsplash.com/photo-1596783049106-a8d6b82522c0?w=500&q=80'},
   ];
 
@@ -385,7 +385,7 @@ class MockData {
       'price': '₹35,000',
       'rating': 5.0,
       'reviews': 1200,
-      'image': 'https://images.unsplash.com/photo-1565345242784-b0d366300407?auto=format&fit=crop&w=800&q=80',
+      'image': 'https://images.unsplash.com/photo-1564507592208-5cb345aeffc2?auto=format&fit=crop&w=800&q=80',
       'amenities': ['Taj Mahal View', 'Pool', 'Spa', 'Luxury Dining'],
       'badge': '👑 Premium',
       'color': const Color(0xFFD4AF37),

@@ -11,6 +11,7 @@ import 'explore_screen.dart';
 import 'location_map_screen.dart';
 import '../models/app_user.dart';
 import '../data/mock_data.dart';
+import '../services/places_api_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -21,6 +22,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final FirebaseService _firebaseService = FirebaseService();
+  final PlacesApiService _placesApiService = PlacesApiService();
   AppUser? _currentUserData;
 
   @override
@@ -239,86 +241,97 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildHorizontalList('🔥 Trending Destinations', 'What\'s hot right now', MockData.trendingDestinations),
-          _buildHorizontalList('🌸 Seasonal Guide', 'Perfect places for this season', MockData.seasonalGuide),
-          _buildHorizontalList('💎 Hidden Gems', 'Lesser-known local favorites', MockData.hiddenGems),
+          _buildHorizontalListStream('🔥 Trending Destinations', 'What\'s hot right now', Stream.fromFuture(_placesApiService.fetchLocations('Top trending tourist attractions in India'))),
+          _buildHorizontalListStream('🌸 Seasonal Guide', 'Perfect places for this season', Stream.fromFuture(_placesApiService.fetchLocations('Beautiful hill stations in India'))),
+          _buildHorizontalListStream('💎 Hidden Gems', 'Lesser-known local favorites', Stream.fromFuture(_placesApiService.fetchLocations('Offbeat hidden gems and nature in India'))),
         ],
       ),
     );
   }
 
-  Widget _buildHorizontalList(String title, String subtitle, List<Map<String, String>> items) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          GestureDetector(
-            onTap: () {
-              Navigator.push(context, MaterialPageRoute(
-                builder: (_) => CategoryDestinationsScreen(
-                  title: title,
-                  subtitle: subtitle,
-                  locations: items,
-                ),
-              ));
-            },
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _buildHorizontalListStream(String title, String subtitle, Stream<List<Map<String, dynamic>>> stream) {
+    return StreamBuilder<List<Map<String, dynamic>>>(
+      stream: stream,
+      builder: (context, snapshot) {
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return const SizedBox.shrink();
+        }
+        final items = snapshot.data!;
+        
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              GestureDetector(
+                onTap: () {
+                  // Ensure category destinations screen works with dynamic maps
+                  Navigator.push(context, MaterialPageRoute(
+                    builder: (_) => CategoryDestinationsScreen(
+                      title: title,
+                      subtitle: subtitle,
+                      locations: items.map((e) => e.map((key, value) => MapEntry(key, value.toString()))).toList(),
+                    ),
+                  ));
+                },
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(title, style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold)),
-                      Text(subtitle, style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey[600])),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(title, style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold)),
+                          Text(subtitle, style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey[600])),
+                        ],
+                      ),
+                      Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey[400]),
                     ],
                   ),
-                  Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey[400]),
-                ],
+                ),
               ),
-            ),
-          ),
-          const SizedBox(height: 12),
-          SizedBox(
-            height: 140,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              itemCount: items.length,
-              itemBuilder: (context, index) {
-                final location = items[index];
-                return GestureDetector(
-                  onTap: () {
-                    Navigator.push(context, MaterialPageRoute(
-                      builder: (_) => LocationMapScreen(locationData: location),
-                    ));
-                  },
-                  child: Container(
-                    width: 120,
-                    margin: const EdgeInsets.symmetric(horizontal: 4),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(16),
-                      image: DecorationImage(
-                        image: NetworkImage(location['image']!),
-                        fit: BoxFit.cover,
-                        colorFilter: ColorFilter.mode(Colors.black.withValues(alpha: 0.3), BlendMode.darken),
+              const SizedBox(height: 12),
+              SizedBox(
+                height: 140,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  itemCount: items.length,
+                  itemBuilder: (context, index) {
+                    final location = items[index];
+                    return GestureDetector(
+                      onTap: () {
+                        Navigator.push(context, MaterialPageRoute(
+                          builder: (_) => LocationMapScreen(locationData: location),
+                        ));
+                      },
+                      child: Container(
+                        width: 120,
+                        margin: const EdgeInsets.symmetric(horizontal: 4),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(16),
+                          image: DecorationImage(
+                            image: NetworkImage(location['image'] ?? 'https://via.placeholder.com/150'),
+                            fit: BoxFit.cover,
+                            colorFilter: ColorFilter.mode(Colors.black.withValues(alpha: 0.3), BlendMode.darken),
+                          ),
+                        ),
+                        alignment: Alignment.bottomLeft,
+                        padding: const EdgeInsets.all(12),
+                        child: Text(
+                          location['name'] ?? 'Unknown',
+                          style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                        ),
                       ),
-                    ),
-                    alignment: Alignment.bottomLeft,
-                    padding: const EdgeInsets.all(12),
-                    child: Text(
-                      location['name']!,
-                      style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
-                    ),
-                  ),
-                );
-              },
-            ),
+                    );
+                  },
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      }
     );
   }
 

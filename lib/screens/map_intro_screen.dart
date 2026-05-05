@@ -40,7 +40,7 @@ class _MapIntroScreenState extends State<MapIntroScreen> {
             child: Opacity(
               opacity: 0.6,
               child: Image.network(
-                'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/India_map_en.svg/1024px-India_map_en.svg.png', // Explicit map of India
+                'https://images.unsplash.com/photo-1524661135-423995f22d0b?w=800&q=80', // Working Map Image
                 fit: BoxFit.contain,
               ).animate()
                 .scaleXY(begin: 1.2, end: 1.0, duration: 2500.ms, curve: Curves.easeOutCubic)

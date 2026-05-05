@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
 import '../services/firebase_service.dart';
+import '../services/places_api_service.dart';
 
 class GeneratedPlanScreen extends StatefulWidget {
   final Map<String, dynamic> requestData;
@@ -16,6 +17,7 @@ class GeneratedPlanScreen extends StatefulWidget {
 
 class _GeneratedPlanScreenState extends State<GeneratedPlanScreen> {
   final FirebaseService _firebaseService = FirebaseService();
+  final PlacesApiService _placesApiService = PlacesApiService();
   bool _isGenerating = true;
   bool _isSaving = false;
 
@@ -32,73 +34,147 @@ class _GeneratedPlanScreenState extends State<GeneratedPlanScreen> {
     }
   }
 
-  void _generateMockItinerary() async {
+  Future<void> _generateMockItinerary() async {
     final destination = widget.requestData['destination'] as String;
     final days = widget.requestData['days'] as int;
     final style = widget.requestData['style'] as String;
+    final budget = widget.requestData['budgetPerPerson'] as int;
+    final travelers = widget.requestData['travelersCount'] as int;
+
+    // Fetch real places - run 2 queries in parallel for more variety
+    final results = await Future.wait([
+      _placesApiService.fetchLocations(
+        style == 'Adventure' ? 'adventure trekking waterfalls $destination'
+        : style == 'Cultural' ? 'temples forts heritage museums $destination'
+        : style == 'Party' ? 'nightlife bars clubs $destination'
+        : 'gardens viewpoints scenic spots $destination'),
+      _placesApiService.fetchLocations(
+        style == 'Adventure' ? 'camping outdoor activities $destination'
+        : style == 'Cultural' ? 'ancient ruins palaces monuments $destination'
+        : style == 'Party' ? 'beach clubs restaurants rooftop $destination'
+        : 'cafes waterfalls resorts $destination'),
+    ]);
+
+    // Merge & shuffle for maximum variety each time
+    final allPlaces = [...results[0], ...results[1]];
+    allPlaces.shuffle();
+
+    // Style-specific lunch options (rotate each day)
+    final lunchOptions = {
+      'Adventure': ['🥾 Quick energy lunch at a mountain café', '🍱 Packed trail lunch with a view', '🥗 Healthy fuel-up at a local dhaba'],
+      'Cultural': ['🍛 Traditional thali at a heritage restaurant', '🫓 Street food tour through the old bazaar', '☕ Chai & snacks at a rooftop café'],
+      'Party': ['🍹 Brunch at a beach shack', '🍔 Late lunch at a rooftop bar', '🥂 Pre-party food crawl'],
+      'Relaxing': ['🥗 Healthy lunch by the pool/lake', '🫖 Peaceful meal at a boutique café', '🍜 Leisurely lunch at a scenic restaurant'],
+    };
+
+    // Style-specific evening options (rotate each day)
+    final eveningOptions = {
+      'Adventure': ['🏕️ Bonfire & camp dinner under the stars', '🌄 Sunset hike with packed dinner', '🔥 Riverside campfire & stargazing'],
+      'Cultural': ['🎭 Evening cultural show or heritage walk', '🪔 Temple aarti ceremony experience', '🎨 Local craft workshop & dinner'],
+      'Party': ['🎉 Club hopping through the nightlife strip', '🎵 Live music evening at a rooftop bar', '🍸 Sunset cocktail cruise or beach party'],
+      'Relaxing': ['🌇 Sunset watching at a scenic viewpoint', '🛁 Evening spa & wellness session', '🌙 Candlelit dinner by the waterfront'],
+    };
+
+    // Morning activity prefixes vary by day
+    final morningVerbs = ['Visit', 'Explore', 'Discover', 'Head to', 'Check out', 'Wander through'];
+    final afternoonVerbs = ['Spend time at', 'Continue to', 'Make your way to', 'Stop by', 'Immerse yourself in'];
+
+    final lunchList = lunchOptions[style]!;
+    final eveningList = eveningOptions[style]!;
+    final morningTime = style == 'Party' ? '10:30 AM' : '08:30 AM';
+    final afternoonTime = style == 'Party' ? '02:30 PM' : '01:30 PM';
+    final eveningTime = style == 'Party' ? '10:00 PM' : '06:00 PM';
+    final budgetLabel = budget > 8000 ? '💎 Premium' : budget > 3000 ? '⭐ Comfort' : '🎒 Budget';
 
     _itineraryDays = List.generate(days, (index) {
       if (index == 0) {
+        final firstPlace = allPlaces.isNotEmpty ? allPlaces[0] : null;
         return {
-          'title': 'Arrival & Check-in',
-          'description': 'Welcome to $destination! Settle in and explore the nearby areas.',
+          'title': 'Arrival & First Impressions',
+          'description': 'Welcome to $destination! $budgetLabel stay for $travelers traveler${travelers > 1 ? "s" : ""}. Get settled and soak it all in.',
           'timeline': [
-            {'time': '02:00 PM', 'activity': 'Check into your premium accommodation'},
-            {'time': '05:30 PM', 'activity': 'Evening stroll around the local market square'},
-            {'time': '08:00 PM', 'activity': 'Welcome dinner at a highly-rated authentic restaurant'},
+            {'time': '12:00 PM', 'activity': '✈️ Arrive & transfer to accommodation'},
+            {'time': '02:00 PM', 'activity': '🏨 Check-in & freshen up'},
+            if (firstPlace != null)
+              {'time': '04:30 PM', 'activity': '📍 First stop: ${firstPlace['name']}'}
+            else
+              {'time': '04:30 PM', 'activity': '🚶 Evening walk around the neighbourhood'},
+            {'time': '07:30 PM', 'activity': '🍽️ Welcome dinner — try the local specialty'},
           ]
         };
       } else if (index == days - 1) {
+        final lastPlace = allPlaces.length > 1 ? allPlaces[allPlaces.length - 1] : null;
         return {
-          'title': 'Departure',
-          'description': 'Time to say goodbye to $destination. Safe travels!',
+          'title': 'Last Day & Departure',
+          'description': 'Soak in $destination one last time before heading home. Safe travels! ✈️',
           'timeline': [
-            {'time': '09:00 AM', 'activity': 'Enjoy a relaxed morning breakfast at the hotel'},
-            {'time': '11:00 AM', 'activity': 'Pick up some local souvenirs and pack your bags'},
-            {'time': '02:00 PM', 'activity': 'Transfer to the airport / station'},
+            {'time': '08:00 AM', 'activity': '☕ Relaxed breakfast & pack up'},
+            if (lastPlace != null)
+              {'time': '10:00 AM', 'activity': '🛍️ Final visit to ${lastPlace['name']}'}
+            else
+              {'time': '10:00 AM', 'activity': '🛍️ Last-minute shopping for souvenirs'},
+            {'time': '12:30 PM', 'activity': '🥘 Farewell lunch at a favourite spot'},
+            {'time': '03:00 PM', 'activity': '🚕 Transfer to airport / railway station'},
           ]
         };
       } else {
-        List<Map<String, String>> timeline = [];
-        if (style == 'Adventure') {
-          timeline = [
-            {'time': '07:00 AM', 'activity': 'Early morning hike to the scenic sunrise point'},
-            {'time': '12:00 PM', 'activity': 'Adrenaline-pumping water sports or paragliding'},
-            {'time': '06:00 PM', 'activity': 'Bonfire and camping dinner'},
-          ];
-        } else if (style == 'Relaxing') {
-          timeline = [
-            {'time': '10:00 AM', 'activity': 'Rejuvenating 2-hour spa session'},
-            {'time': '01:00 PM', 'activity': 'Lunch by the serene beachfront or valley cafe'},
-            {'time': '05:00 PM', 'activity': 'Sunset watching with a mocktail'},
-          ];
-        } else if (style == 'Cultural') {
-          timeline = [
-            {'time': '09:00 AM', 'activity': 'Guided tour of the Grand Heritage Museum'},
-            {'time': '02:00 PM', 'activity': 'Visit the ancient temple ruins and historical monuments'},
-            {'time': '07:00 PM', 'activity': 'Local folk dance and cultural show'},
-          ];
-        } else {
-          // Party
-          timeline = [
-            {'time': '11:00 AM', 'activity': 'Late breakfast and relaxing at a beach club'},
-            {'time': '04:00 PM', 'activity': 'Sunset boat party with live DJ'},
-            {'time': '10:00 PM', 'activity': 'Club hopping through the famous nightlife street'},
-          ];
-        }
+        // Unique places per day — offset by day index, no repetition
+        final offset = (index - 1) * 3;
+        final p1 = allPlaces.isNotEmpty ? allPlaces[offset % allPlaces.length] : null;
+        final p2 = allPlaces.length > 1 ? allPlaces[(offset + 1) % allPlaces.length] : null;
+        final p3 = allPlaces.length > 2 ? allPlaces[(offset + 2) % allPlaces.length] : null;
+
+        final morningVerb = morningVerbs[index % morningVerbs.length];
+        final afternoonVerb = afternoonVerbs[index % afternoonVerbs.length];
+        final lunch = lunchList[index % lunchList.length];
+        final evening = eveningList[index % eveningList.length];
+
+        final dayTitles = {
+          'Adventure': ['Mountain & Trails Day', 'Wild Exploration Day', 'Adrenaline Rush Day', 'Nature Discovery Day'],
+          'Cultural': ['Heritage Deep Dive', 'History & Arts Day', 'Temples & Traditions Day', 'Old City Exploration'],
+          'Party': ['Beach Vibes Day', 'Night Owl Day', 'Sunset & Sundown Day', 'Festival Mode Day'],
+          'Relaxing': ['Slow Morning Day', 'Nature & Serenity Day', 'Spa & Scenic Day', 'Peaceful Wandering Day'],
+        };
+        final titleList = dayTitles[style]!;
+        final dayTitle = 'Day ${index + 1} — ${titleList[(index - 1) % titleList.length]}';
+
         return {
-          'title': 'Day ${index + 1} - $style Experience',
-          'description': 'A full day of $style activities curated just for you.',
-          'timeline': timeline,
+          'title': dayTitle,
+          'description': p1 != null
+              ? 'Today\'s highlights: ${[p1, p2, p3].where((p) => p != null).map((p) => p!['name']).join(', ')}.'
+              : 'A full day of $style experiences in $destination.',
+          'timeline': [
+            {
+              'time': morningTime,
+              'activity': p1 != null ? '🌅 $morningVerb ${p1['name']}' : '🌅 Morning exploration of $destination',
+              if (p1 != null) 'address': p1['address'] ?? '',
+              if (p1 != null) 'rating': p1['rating'],
+              if (p1 != null) 'reviews': p1['reviews'],
+            },
+            {'time': '11:00 AM', 'activity': lunch},
+            {
+              'time': afternoonTime,
+              'activity': p2 != null ? '🗺️ $afternoonVerb ${p2['name']}' : '🗺️ Afternoon discovery in $destination',
+              if (p2 != null) 'address': p2['address'] ?? '',
+              if (p2 != null) 'rating': p2['rating'],
+              if (p2 != null) 'reviews': p2['reviews'],
+            },
+            if (p3 != null) {
+              'time': '04:00 PM',
+              'activity': '📸 Quick stop: ${p3['name']}',
+              'address': p3['address'] ?? '',
+              'rating': p3['rating'],
+              'reviews': p3['reviews'],
+            },
+            {'time': eveningTime, 'activity': evening},
+          ],
         };
       }
     });
 
-    await Future.delayed(const Duration(seconds: 3));
-    if (mounted) {
-      setState(() => _isGenerating = false);
-    }
+    if (mounted) setState(() => _isGenerating = false);
   }
+
 
   /// Returns a list of mock nearby hotels/hostels based on the destination keyword.
   List<Map<String, dynamic>> _getNearbyStays(String destination) {
@@ -407,22 +483,74 @@ class _GeneratedPlanScreenState extends State<GeneratedPlanScreen> {
                                 const SizedBox(height: 12),
                                 ...(day['timeline'] as List<dynamic>).map((item) {
                                   final timelineItem = item as Map<String, dynamic>;
+                                  final hasPlace = timelineItem.containsKey('address') && (timelineItem['address'] as String).isNotEmpty;
+                                  final rating = timelineItem['rating'];
+                                  final reviews = timelineItem['reviews'];
                                   return Padding(
-                                    padding: const EdgeInsets.only(bottom: 8),
+                                    padding: const EdgeInsets.only(bottom: 12),
                                     child: Row(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
+                                        // Time badge
                                         Container(
                                           width: 65,
-                                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 3),
                                           decoration: BoxDecoration(
-                                            color: Colors.grey[100],
-                                            borderRadius: BorderRadius.circular(4),
+                                            color: Colors.amber[50],
+                                            borderRadius: BorderRadius.circular(6),
+                                            border: Border.all(color: Colors.amber[200]!),
                                           ),
-                                          child: Text(timelineItem['time'].toString(), style: GoogleFonts.poppins(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.grey[800]), textAlign: TextAlign.center),
+                                          child: Text(timelineItem['time'].toString(),
+                                              style: GoogleFonts.poppins(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.amber[900]),
+                                              textAlign: TextAlign.center),
                                         ),
-                                        const SizedBox(width: 8),
-                                        Expanded(child: Text(timelineItem['activity'].toString(), style: GoogleFonts.poppins(fontSize: 12, color: Colors.black87))),
+                                        const SizedBox(width: 10),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              // Activity name
+                                              Text(timelineItem['activity'].toString(),
+                                                  style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.black87)),
+                                              // Address row
+                                              if (hasPlace) ...[
+                                                const SizedBox(height: 3),
+                                                Row(
+                                                  children: [
+                                                    Icon(Icons.location_on, size: 12, color: Colors.grey[500]),
+                                                    const SizedBox(width: 3),
+                                                    Expanded(
+                                                      child: Text(
+                                                        timelineItem['address'].toString(),
+                                                        style: GoogleFonts.poppins(fontSize: 11, color: Colors.grey[500]),
+                                                        maxLines: 1,
+                                                        overflow: TextOverflow.ellipsis,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ],
+                                              // Rating
+                                              if (hasPlace && rating != null && (rating as double) > 0) ...[
+                                                const SizedBox(height: 4),
+                                                Row(
+                                                  children: [
+                                                    ...List.generate(5, (i) => Icon(
+                                                      i < (rating as double).round() ? Icons.star_rounded : Icons.star_outline_rounded,
+                                                      size: 12,
+                                                      color: Colors.amber[600],
+                                                    )),
+                                                    const SizedBox(width: 4),
+                                                    Text(
+                                                      '${rating.toStringAsFixed(1)}${reviews != null && (reviews as int) > 0 ? " (${reviews})" : ""}',
+                                                      style: GoogleFonts.poppins(fontSize: 11, color: Colors.grey[600], fontWeight: FontWeight.w600),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ],
+                                            ],
+                                          ),
+                                        ),
                                       ],
                                     ),
                                   );

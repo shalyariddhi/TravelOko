@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import '../services/firebase_service.dart';
+import '../services/places_api_service.dart';
 import '../data/mock_data.dart';
 
 class AccommodationsScreen extends StatefulWidget {
@@ -19,16 +19,6 @@ class _AccommodationsScreenState extends State<AccommodationsScreen> {
   double _maxPrice = 20000;
   double _minRating = 0;
   int _minReviews = 0;
-
-  List<Map<String, dynamic>> get _filtered {
-    return MockData.accommodations.where((a) {
-      final typeMatch = _selectedType == 'All' || a['type'] == _selectedType;
-      final priceMatch = (a['priceNum'] as int) >= _minPrice && (a['priceNum'] as int) <= _maxPrice;
-      final ratingMatch = (a['rating'] as double) >= _minRating;
-      final reviewMatch = (a['reviews'] as int) >= _minReviews;
-      return typeMatch && priceMatch && ratingMatch && reviewMatch;
-    }).toList();
-  }
 
   void _showFilterSheet() {
     double tempMin = _minPrice;
@@ -217,15 +207,35 @@ class _AccommodationsScreenState extends State<AccommodationsScreen> {
     );
   }
 
+  final PlacesApiService _placesApiService = PlacesApiService();
+
   @override
   Widget build(BuildContext context) {
-    final filtered = _filtered;
-    final hasActiveFilters = _minPrice > 0 || _maxPrice < 20000 || _minRating > 0 || _minReviews > 0;
-
     return Scaffold(
       backgroundColor: const Color(0xFFF6F7F9),
-      body: CustomScrollView(
-        slivers: [
+      body: FutureBuilder<List<Map<String, dynamic>>>(
+        future: _placesApiService.fetchAccommodations('India'),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator(color: Colors.amber));
+          }
+          if (snapshot.hasError) {
+            return const Center(child: Text('Error loading accommodations'));
+          }
+
+          final allAccommodations = snapshot.data ?? [];
+          final filtered = allAccommodations.where((a) {
+            final typeMatch = _selectedType == 'All' || a['type'] == _selectedType;
+            final priceMatch = (a['priceNum'] as num).toInt() >= _minPrice && (a['priceNum'] as num).toInt() <= _maxPrice;
+            final ratingMatch = (a['rating'] as num).toDouble() >= _minRating;
+            final reviewMatch = (a['reviews'] as num).toInt() >= _minReviews;
+            return typeMatch && priceMatch && ratingMatch && reviewMatch;
+          }).toList();
+
+          final hasActiveFilters = _minPrice > 0 || _maxPrice < 20000 || _minRating > 0 || _minReviews > 0;
+
+          return CustomScrollView(
+            slivers: [
 
 
           // ── Type Filters + Filter Button ──
@@ -356,8 +366,10 @@ class _AccommodationsScreenState extends State<AccommodationsScreen> {
                   ),
                 ),
         ],
-      ),
-    );
+      );
+     },
+    ),
+   );
   }
 
   Widget _buildCard(Map<String, dynamic> item, int index) {

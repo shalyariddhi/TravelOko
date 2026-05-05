@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/firebase_service.dart';
 import '../screens/generated_plan_screen.dart';
+import '../services/places_api_service.dart';
 
 class CustomTripBottomSheet extends StatefulWidget {
   const CustomTripBottomSheet({super.key});
@@ -12,30 +13,70 @@ class CustomTripBottomSheet extends StatefulWidget {
 
 class _CustomTripBottomSheetState extends State<CustomTripBottomSheet> {
   final _budgetController = TextEditingController(text: '15000');
+  final _destinationController = TextEditingController();
   final FirebaseService _firebaseService = FirebaseService();
+  final PlacesApiService _placesApiService = PlacesApiService();
   
-  String? _selectedDestination;
   int _travelers = 2;
   double _days = 3;
   String _selectedStyle = 'Relaxing';
   bool _isLoading = false;
 
-  final List<String> _destinations = [
-    'Andaman', 'Bali', 'Dubai', 'Goa', 'Himachal', 'Kerala', 'Ladakh', 'Rajasthan', 'Sikkim'
-  ]..sort();
+  // Comprehensive list of Indian cities
+  static final List<String> _allIndiaCities = [
+    'Agartala', 'Agra', 'Ahmedabad', 'Aizawl', 'Ajmer', 'Akola', 'Aligarh',
+    'Allahabad', 'Alappuzha', 'Alwar', 'Ambala', 'Amravati', 'Amritsar',
+    'Anand', 'Anantapur', 'Andaman Islands', 'Asansol', 'Aurangabad',
+    'Badami', 'Bagdogra', 'Bangalore', 'Bareilly', 'Bathinda', 'Belagavi',
+    'Bhagalpur', 'Bharatpur', 'Bhopal', 'Bhubaneswar', 'Bidar', 'Bikaner',
+    'Bilaspur', 'Bokaro', 'Chandigarh', 'Chennai', 'Chhatarpur',
+    'Chikmagalur', 'Coimbatore', 'Coorg', 'Cuttack',
+    'Dahanu', 'Darjeeling', 'Dehradun', 'Delhi', 'Dharamshala', 'Diu',
+    'Durgapur', 'Dwarka',
+    'Ernakulam', 'Erode',
+    'Faridabad', 'Fatehpur Sikri', 'Gangtok', 'Gaya', 'Goa', 'Gorakhpur',
+    'Gulbarga', 'Guntur', 'Gurgaon', 'Guwahati', 'Gwalior',
+    'Hampi', 'Haridwar', 'Hassan', 'Hisar', 'Hospet', 'Hubli', 'Hyderabad',
+    'Imphal', 'Indore', 'Itanagar',
+    'Jabalpur', 'Jaipur', 'Jaisalmer', 'Jalandhar', 'Jammu', 'Jamnagar',
+    'Jamshedpur', 'Jodhpur', 'Jorhat',
+    'Kakinada', 'Kalimpong', 'Kanpur', 'Karaikudi', 'Karimnagar', 'Kasauli',
+    'Katra', 'Khajuraho', 'Kochi', 'Kodaikanal', 'Kohima', 'Kolhapur',
+    'Kolkata', 'Kollam', 'Kota', 'Kottayam', 'Kozhikode', 'Kumbakonam',
+    'Kutch',
+    'Ladakh', 'Lakshadweep', 'Leh', 'Lucknow', 'Ludhiana',
+    'Madurai', 'Mahabaleshwar', 'Mahabalipuram', 'Mangalore', 'Manali',
+    'Meerut', 'Moradabad', 'Mount Abu', 'Mumbai', 'Munnar', 'Mysore',
+    'Nagpur', 'Nainital', 'Nashik', 'Nathdwara', 'Navi Mumbai', 'Noida',
+    'Ooty', 'Orchha',
+    'Palakkad', 'Panaji', 'Patna', 'Patiala', 'Pondicherry', 'Port Blair',
+    'Pune', 'Puri', 'Pushkar',
+    'Raipur', 'Rajahmundry', 'Rajkot', 'Rameshwaram', 'Ranchi', 'Rishikesh',
+    'Roorkee', 'Rourkela',
+    'Salem', 'Samode', 'Shillong', 'Shimla', 'Siliguri', 'Silvassa',
+    'Somnath', 'Srinagar', 'Surat', 'Surendranagar',
+    'Thrissur', 'Thiruvananthapuram', 'Tirupati', 'Tiruchirapalli',
+    'Tirunelveli', 'Trichur', 'Trichy', 'Tumkur',
+    'Udaipur', 'Ujjain', 'Udupi',
+    'Vadodara', 'Vapi', 'Varanasi', 'Vellore', 'Vijayawada', 'Visakhapatnam',
+    'Warangal', 'Wardha',
+    'Yamunanagar',
+  ];
 
   final List<String> _tripStyles = ['Relaxing', 'Adventure', 'Cultural', 'Party'];
 
   @override
   void dispose() {
     _budgetController.dispose();
+    _destinationController.dispose();
     super.dispose();
   }
 
   Future<void> _submitRequest() async {
-    if (_selectedDestination == null) {
+    final destination = _destinationController.text.trim();
+    if (destination.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a destination')),
+        const SnackBar(content: Text('Please select or type a destination')),
       );
       return;
     }
@@ -53,7 +94,7 @@ class _CustomTripBottomSheetState extends State<CustomTripBottomSheet> {
     setState(() => _isLoading = true);
 
     final requestData = {
-      'destination': _selectedDestination,
+      'destination': destination,
       'budgetPerPerson': budget,
       'travelersCount': _travelers,
       'days': _days.toInt(),
@@ -120,38 +161,91 @@ class _CustomTripBottomSheetState extends State<CustomTripBottomSheet> {
               style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 16),
             ),
             const SizedBox(height: 8),
-            DropdownButtonFormField<String>(
-              value: _selectedDestination,
-              hint: Text('Select Destination', style: GoogleFonts.poppins(color: Colors.grey[400])),
-              items: _destinations.map((String dest) {
-                return DropdownMenuItem<String>(
-                  value: dest,
-                  child: Text(dest, style: GoogleFonts.poppins()),
-                );
-              }).toList(),
-              onChanged: (newValue) {
-                setState(() {
-                  _selectedDestination = newValue;
-                });
+            Autocomplete<String>(
+              optionsBuilder: (TextEditingValue textEditingValue) async {
+                final query = textEditingValue.text.trim();
+                if (query.isEmpty) {
+                  return _allIndiaCities; // show full list on tap
+                }
+                // First filter local list
+                final localMatches = _allIndiaCities.where(
+                  (city) => city.toLowerCase().startsWith(query.toLowerCase()),
+                ).toList();
+                if (localMatches.isNotEmpty) return localMatches;
+                // Fallback: live Google Places results
+                return await _placesApiService.fetchAutocomplete(query);
               },
-              icon: const Icon(Icons.keyboard_arrow_down, color: Colors.amber),
-              decoration: InputDecoration(
-                prefixIcon: const Icon(Icons.location_on_outlined, color: Colors.amber),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide(color: Colors.grey[300]!),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide(color: Colors.grey[300]!),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: const BorderSide(color: Colors.amber, width: 2),
-                ),
-                filled: true,
-                fillColor: Colors.grey[50],
-              ),
+              onSelected: (String selection) {
+                _destinationController.text = selection;
+              },
+              fieldViewBuilder: (context, controller, focusNode, onEditingComplete) {
+                // Keep controllers in sync so we can grab the text during submission
+                if (_destinationController.text != controller.text && !focusNode.hasFocus) {
+                  controller.text = _destinationController.text;
+                }
+                controller.addListener(() {
+                  _destinationController.text = controller.text;
+                });
+                
+                return TextField(
+                  controller: controller,
+                  focusNode: focusNode,
+                  onEditingComplete: onEditingComplete,
+                  style: GoogleFonts.poppins(),
+                  decoration: InputDecoration(
+                    hintText: 'Tap to browse or search...',
+                    hintStyle: GoogleFonts.poppins(color: Colors.grey[400]),
+                    prefixIcon: const Icon(Icons.location_on_outlined, color: Colors.amber),
+                    suffixIcon: const Icon(Icons.arrow_drop_down, color: Colors.amber),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide(color: Colors.grey[300]!),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide(color: Colors.grey[300]!),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: const BorderSide(color: Colors.amber, width: 2),
+                    ),
+                    filled: true,
+                    fillColor: Colors.grey[50],
+                  ),
+                );
+              },
+              optionsViewBuilder: (context, onSelected, options) {
+                return Align(
+                  alignment: Alignment.topLeft,
+                  child: Material(
+                    elevation: 4,
+                    borderRadius: BorderRadius.circular(16),
+                    child: Container(
+                      width: MediaQuery.of(context).size.width - 48,
+                      constraints: const BoxConstraints(maxHeight: 220),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: ListView.builder(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        shrinkWrap: true,
+                        itemCount: options.length,
+                        itemBuilder: (BuildContext context, int index) {
+                          final String option = options.elementAt(index);
+                          return InkWell(
+                            onTap: () => onSelected(option),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                              child: Text(option, style: GoogleFonts.poppins(fontSize: 15)),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                );
+              },
             ),
             const SizedBox(height: 24),
 
