@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../services/firebase_service.dart';
 
 class AppealScreen extends StatefulWidget {
   const AppealScreen({super.key});

@@ -10,10 +10,12 @@ import '../models/app_user.dart';
 import '../models/social_post.dart';
 import '../models/user_review.dart';
 import 'login_screen.dart';
-import 'quiz_screen.dart';
+
 import 'community_guidelines_screen.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'chat_screen.dart';
+import 'settings_screen.dart';
+import 'paywall_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   final String? targetUserId;
@@ -63,65 +65,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final currentFirebaseUser = _firebaseService.currentUser;
     final isOwnProfile = widget.targetUserId == null || widget.targetUserId == currentFirebaseUser?.uid;
     final targetUid = isOwnProfile ? currentFirebaseUser?.uid : widget.targetUserId;
-    
+
+    if (targetUid == null) {
+      return const Scaffold(body: Center(child: Text('Please log in')));
+    }
+
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        title: Text(
-          isOwnProfile ? 'Profile' : 'Traveler Profile',
-          style: GoogleFonts.poppins(color: Colors.black, fontWeight: FontWeight.bold),
-        ),
-        centerTitle: true,
-        iconTheme: const IconThemeData(color: Colors.black),
-        actions: [
-          if (isOwnProfile)
-            IconButton(
-              icon: const Icon(Icons.shield_outlined, color: Colors.blue),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const CommunityGuidelinesScreen()),
-                );
-              },
-            ),
-          if (isOwnProfile)
-            IconButton(
-              icon: const Icon(Icons.logout, color: Colors.redAccent),
-              onPressed: () async {
-                await _firebaseService.signOut();
-                if (!context.mounted) return;
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => const LoginScreen()),
-                );
-              },
-            ),
-          if (!isOwnProfile)
-            IconButton(
-              icon: const Icon(Icons.more_vert, color: Colors.black),
-              onPressed: () => _showReportBottomSheet(targetUid!),
-            ),
-        ],
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      body: StreamBuilder<AppUser?>(
+        stream: _firebaseService.getUserProfile(targetUid),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return _buildShimmerLoading();
+          }
+          final appUser = snapshot.data;
+          if (appUser == null) {
+            return const Center(child: Text('Error loading profile'));
+          }
+          return _buildProfileContent(appUser, isOwnProfile: isOwnProfile);
+        },
       ),
-      body: targetUid == null
-          ? const Center(child: Text('Please log in'))
-          : StreamBuilder<AppUser?>(
-              stream: _firebaseService.getUserProfile(targetUid),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return _buildShimmerLoading();
-                }
-                
-                final appUser = snapshot.data;
-                if (appUser == null) {
-                  return const Center(child: Text('Error loading profile'));
-                }
-                
-                return _buildProfileContent(appUser, isOwnProfile: isOwnProfile);
-              },
-            ),
     );
   }
 
@@ -133,42 +96,42 @@ class _ProfileScreenState extends State<ProfileScreen> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Shimmer.fromColors(
-              baseColor: Colors.grey[300]!,
-              highlightColor: Colors.grey[100]!,
+              baseColor: Theme.of(context).dividerColor,
+              highlightColor: Theme.of(context).cardColor,
               child: const CircleAvatar(radius: 50),
             ),
             const SizedBox(height: 20),
             Shimmer.fromColors(
-              baseColor: Colors.grey[300]!,
-              highlightColor: Colors.grey[100]!,
-              child: Container(width: 150, height: 20, color: Colors.white),
+              baseColor: Theme.of(context).dividerColor,
+              highlightColor: Theme.of(context).cardColor,
+              child: Container(width: 150, height: 20, color: Theme.of(context).cardColor),
             ),
             const SizedBox(height: 10),
             Shimmer.fromColors(
-              baseColor: Colors.grey[300]!,
-              highlightColor: Colors.grey[100]!,
-              child: Container(width: 100, height: 15, color: Colors.white),
+              baseColor: Theme.of(context).dividerColor,
+              highlightColor: Theme.of(context).cardColor,
+              child: Container(width: 100, height: 15, color: Theme.of(context).cardColor),
             ),
             const SizedBox(height: 30),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: List.generate(3, (index) => Shimmer.fromColors(
-                baseColor: Colors.grey[300]!,
-                highlightColor: Colors.grey[100]!,
-                child: Container(width: 60, height: 60, color: Colors.white),
+                baseColor: Theme.of(context).dividerColor,
+                highlightColor: Theme.of(context).cardColor,
+                child: Container(width: 60, height: 60, color: Theme.of(context).cardColor),
               )),
             ),
             const SizedBox(height: 30),
             Shimmer.fromColors(
-              baseColor: Colors.grey[300]!,
-              highlightColor: Colors.grey[100]!,
-              child: Container(width: double.infinity, height: 150, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15))),
+              baseColor: Theme.of(context).dividerColor,
+              highlightColor: Theme.of(context).cardColor,
+              child: Container(width: double.infinity, height: 150, decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(15))),
             ),
             const SizedBox(height: 20),
             Shimmer.fromColors(
-              baseColor: Colors.grey[300]!,
-              highlightColor: Colors.grey[100]!,
-              child: Container(width: double.infinity, height: 300, color: Colors.white),
+              baseColor: Theme.of(context).dividerColor,
+              highlightColor: Theme.of(context).cardColor,
+              child: Container(width: double.infinity, height: 300, color: Theme.of(context).cardColor),
             ),
           ],
         ),
@@ -178,52 +141,350 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Widget _buildProfileContent(AppUser user, {bool isOwnProfile = true}) {
     final isContentVisible = !user.isPrivate || isOwnProfile;
+    final photoUrl = user.photoUrl.isNotEmpty && !user.photoUrl.contains('pravatar')
+        ? user.photoUrl
+        : 'https://api.dicebear.com/9.x/avataaars/png?seed=${user.uid}';
 
-    return SingleChildScrollView(
-      child: Column(
-        children: [
-          _buildHeader(user, isOwnProfile),
-          if (!isOwnProfile) _buildFollowButton(user),
-          _buildStatsRow(user),
-          if (isOwnProfile && user.gender.toLowerCase() == 'female') _buildSettingsToggle(user),
-          if (isOwnProfile) _buildPrivacyToggle(user),
-          if (isOwnProfile) _buildSetEmojiButton(user),
-          if (isOwnProfile) _buildDeveloperTools(),
-
-          // ── Reviews are ALWAYS visible (safety feature) ──
-          _buildReviewsSection(user, isOwnProfile),
-
-          // ── Posts & Gallery are hidden when private & not following ──
-          if (isContentVisible) ...[ 
-            _buildPostsSection(user),
-            _buildTestimonialsSection(),
-            _buildGallerySection(),
-          ] else ...[
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-              child: Container(
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: Colors.grey[100],
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.grey[300]!),
+    return CustomScrollView(
+      slivers: [
+        // ── Collapsing App Bar ──
+        SliverAppBar(
+          expandedHeight: 280,
+          collapsedHeight: 72,
+          pinned: true,
+          backgroundColor: Theme.of(context).cardColor,
+          elevation: 0,
+          automaticallyImplyLeading: widget.targetUserId != null,
+          iconTheme: IconThemeData(color: Theme.of(context).textTheme.bodyLarge?.color),
+          // Collapsed state: avatar on left, action icons on right
+          title: Row(
+            children: [
+              CircleAvatar(
+                radius: 18,
+                backgroundImage: NetworkImage(photoUrl),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  user.displayName.isNotEmpty ? user.displayName : 'Traveler',
+                  style: GoogleFonts.outfit(color: Theme.of(context).textTheme.bodyLarge?.color, fontWeight: FontWeight.bold, fontSize: 15),
+                  overflow: TextOverflow.ellipsis,
                 ),
-                child: Column(
-                  children: [
-                    const Icon(Icons.lock_outline, size: 40, color: Colors.grey),
-                    const SizedBox(height: 12),
-                    Text('Posts are Private',
-                        style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: Colors.grey[700], fontSize: 16)),
-                    const SizedBox(height: 6),
-                    Text('Follow this user to see their posts.',
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.poppins(color: Colors.grey[500], fontSize: 13)),
-                  ],
+              ),
+            ],
+          ),
+          actions: [
+            if (isOwnProfile)
+              IconButton(
+                icon: const Icon(Icons.shield_outlined, color: Colors.blue),
+                onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CommunityGuidelinesScreen())),
+              ),
+            if (isOwnProfile)
+              IconButton(
+                icon: Icon(Icons.settings, color: Theme.of(context).textTheme.bodyLarge?.color),
+                onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen())),
+              ),
+            if (isOwnProfile)
+              IconButton(
+                icon: const Icon(Icons.logout, color: Colors.redAccent),
+                onPressed: () async {
+                  await _firebaseService.signOut();
+                  if (!mounted) return;
+                  Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const LoginScreen()));
+                },
+              ),
+            if (!isOwnProfile)
+              IconButton(
+                icon: Icon(Icons.more_vert, color: Theme.of(context).textTheme.bodyLarge?.color),
+                onPressed: () => _showReportBottomSheet(user.uid),
+              ),
+          ],
+          // Expanded state: centred avatar + bio
+          flexibleSpace: FlexibleSpaceBar(
+            collapseMode: CollapseMode.pin,
+            background: Container(
+              color: Theme.of(context).cardColor,
+              child: SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 56, 20, 0),
+                  child: Column(
+                    children: [
+                      // ── Avatar + info row ──
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          // Avatar
+                          GestureDetector(
+                            onTap: isOwnProfile ? () => _showAvatarPicker(user) : null,
+                            child: Stack(
+                              children: [
+                                Container(
+                                  decoration: (user.isOnlyGirlsMode && user.gender.toLowerCase() == 'female')
+                                      ? BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          boxShadow: [BoxShadow(color: Colors.pinkAccent.withValues(alpha: 0.6), blurRadius: 20, spreadRadius: 5)],
+                                        )
+                                      : null,
+                                  child: CircleAvatar(
+                                    radius: 46,
+                                    backgroundColor: (user.isOnlyGirlsMode && user.gender.toLowerCase() == 'female')
+                                        ? Colors.pinkAccent
+                                        : Theme.of(context).dividerColor,
+                                    child: CircleAvatar(
+                                      radius: 42,
+                                      backgroundImage: NetworkImage(photoUrl),
+                                      onBackgroundImageError: (e, s) {},
+                                    ),
+                                  ),
+                                ),
+                                if (isOwnProfile)
+                                  Positioned(
+                                    bottom: 0,
+                                    right: 0,
+                                    child: Container(
+                                      padding: const EdgeInsets.all(5),
+                                      decoration: BoxDecoration(
+                                        color: Theme.of(context).primaryColor,
+                                        shape: BoxShape.circle,
+                                        border: Border.all(color: Theme.of(context).cardColor, width: 2),
+                                      ),
+                                      child: Icon(Icons.camera_alt, size: 14, color: Theme.of(context).textTheme.bodyLarge?.color),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          // Right-side info
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Flexible(
+                                      child: Text(
+                                        user.displayName.isNotEmpty ? user.displayName : 'Traveler',
+                                        style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.w800),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 6),
+                                    if (user.isPro)
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                        decoration: BoxDecoration(color: Colors.amber, borderRadius: BorderRadius.circular(4)),
+                                        child: Text('PRO', style: GoogleFonts.outfit(color: Colors.black, fontSize: 10, fontWeight: FontWeight.bold)),
+                                      ),
+                                    if (user.isPro) const SizedBox(width: 6),
+                                    if (user.statusEmoji.isNotEmpty)
+                                      Text(user.statusEmoji, style: const TextStyle(fontSize: 20))
+                                    else
+                                      const Icon(Icons.verified, color: Colors.blue, size: 20),
+                                  ],
+                                ),
+                                const SizedBox(height: 4),
+                                // Trust score
+                                Row(
+                                  children: [
+                                    const Icon(Icons.shield, color: Colors.green, size: 14),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      'Trust: ${user.verifiedScore}/100',
+                                      style: GoogleFonts.outfit(color: Colors.green, fontSize: 11, fontWeight: FontWeight.bold),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 4),
+                                // Reputation
+                                Row(
+                                  children: [
+                                    Icon(Icons.star, color: Theme.of(context).primaryColor, size: 14),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      '${user.reputationScore.toStringAsFixed(1)} Reputation',
+                                      style: GoogleFonts.outfit(color: Theme.of(context).primaryColorDark, fontSize: 11, fontWeight: FontWeight.bold),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
+                                // Edit Profile / Follow button
+                                if (isOwnProfile)
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: GestureDetector(
+                                          onTap: () => _showEditProfileSheet(user),
+                                          child: Container(
+                                            padding: const EdgeInsets.symmetric(vertical: 8),
+                                            decoration: BoxDecoration(
+                                              color: Theme.of(context).primaryColor,
+                                              borderRadius: BorderRadius.circular(10),
+                                            ),
+                                            child: Row(
+                                              mainAxisAlignment: MainAxisAlignment.center,
+                                              children: [
+                                                Icon(Icons.edit, size: 14, color: Theme.of(context).textTheme.bodyLarge?.color),
+                                                const SizedBox(width: 4),
+                                                Text('Edit Profile', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 12, color: Theme.of(context).textTheme.bodyLarge?.color)),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  )
+                                else
+                                  _buildFollowButton(user),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      // Bio
+                      GestureDetector(
+                        onTap: isOwnProfile ? () => _editBio(user) : null,
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                user.bio.isNotEmpty ? user.bio : (isOwnProfile ? 'Tap to add your bio...' : 'World Traveler ✈️ | Explorer'),
+                                style: GoogleFonts.outfit(color: Theme.of(context).textTheme.bodyMedium?.color, fontSize: 13),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            if (isOwnProfile) Icon(Icons.edit, size: 12, color: Theme.of(context).textTheme.bodySmall?.color),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
+          ),
+        ),
+
+        // ── Rest of profile as slivers ──
+        SliverToBoxAdapter(
+          child: Column(
+            children: [
+              _buildStatsRow(user),
+              if (isOwnProfile && !user.isPro) _buildProBanner(),
+              _buildBadgesSection(user),
+              if (isOwnProfile && user.gender.toLowerCase() == 'female') _buildSettingsToggle(user),
+              if (isOwnProfile) _buildDeveloperTools(),
+              _buildReviewsSection(user, isOwnProfile),
+              if (isContentVisible) ...[
+                _buildPostsSection(user),
+                _buildTestimonialsSection(),
+                _buildGallerySection(),
+              ] else ...[
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                  child: Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).cardColor,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Theme.of(context).dividerColor),
+                    ),
+                    child: Column(
+                      children: [
+                        Icon(Icons.lock_outline, size: 40, color: Theme.of(context).textTheme.bodyMedium?.color),
+                        const SizedBox(height: 12),
+                        Text('Posts are Private',
+                            style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Theme.of(context).textTheme.bodyMedium?.color, fontSize: 16)),
+                        const SizedBox(height: 6),
+                        Text('Follow this user to see their posts.',
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.outfit(color: Theme.of(context).textTheme.bodyMedium?.color, fontSize: 13)),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+              const SizedBox(height: 40),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildProBanner() {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const PaywallScreen()),
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(colors: [Color(0xFF1E1E1C), Color(0xFF3A3A35)]),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 10, offset: const Offset(0, 4))],
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(color: Colors.amber.withValues(alpha: 0.2), shape: BoxShape.circle),
+              child: const Icon(Icons.workspace_premium, color: Colors.amber, size: 24),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Upgrade to Pro', style: GoogleFonts.outfit(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                  Text('Unlock unlimited AI trips & features', style: GoogleFonts.outfit(color: Colors.white70, fontSize: 12)),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right, color: Colors.white),
           ],
-        ].animate(interval: 100.ms).fadeIn(duration: 500.ms).slideY(begin: 0.1, end: 0),
+        ),
+      ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.2, end: 0),
+    );
+  }
+
+  Widget _buildBadgesSection(AppUser user) {
+    if (user.badges.isEmpty) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Badges & Achievements', style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: user.badges.map((badge) {
+              return Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.amber.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(badge, style: GoogleFonts.outfit(color: Colors.amber[800], fontWeight: FontWeight.bold, fontSize: 13)),
+                  ],
+                ),
+              );
+            }).toList(),
+          ),
+        ],
       ),
     );
   }
@@ -250,11 +511,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     }
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: isFollowing ? Colors.grey[300] : Colors.amber,
-                    foregroundColor: isFollowing ? Colors.black87 : Colors.black87,
+                    backgroundColor: isFollowing ? Theme.of(context).dividerColor : Theme.of(context).primaryColor,
+                    foregroundColor: isFollowing ? Theme.of(context).textTheme.bodyLarge?.color : Theme.of(context).textTheme.bodyLarge?.color,
                     minimumSize: const Size(double.infinity, 45),
                   ),
-                  child: Text(isFollowing ? 'Unfollow' : 'Follow', style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+                  child: Text(isFollowing ? 'Unfollow' : 'Follow', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
                 ),
               ),
               if (isFollowing) ...[
@@ -265,7 +526,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       Navigator.push(context, MaterialPageRoute(builder: (_) => ChatScreen(targetUser: user)));
                     },
                     icon: const Icon(Icons.chat_bubble_outline, size: 18),
-                    label: Text('Chat', style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+                    label: Text('Chat', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blue[100],
                       foregroundColor: Colors.blue[900],
@@ -282,132 +543,75 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildPrivacyToggle(AppUser user) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(15),
-          border: Border.all(color: Colors.grey[200]!),
-        ),
-        child: SwitchListTile(
-          title: Text('Private Account', style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
-          subtitle: Text('Only followers can see your posts', style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey[600])),
-          value: user.isPrivate,
-          activeColor: Colors.amber,
-          onChanged: (bool value) async {
-            final updatedUser = AppUser(
-              uid: user.uid,
-              displayName: user.displayName,
-              email: user.email,
-              photoUrl: user.photoUrl,
-              bio: user.bio,
-              tripsCount: user.tripsCount,
-              followersCount: user.followersCount,
-              badges: user.badges,
-              verifiedScore: user.verifiedScore,
-              gender: user.gender,
-              dateOfBirth: user.dateOfBirth,
-              locality: user.locality,
-              isIdentityVerified: user.isIdentityVerified,
-              isOnlyGirlsMode: user.isOnlyGirlsMode,
-              following: user.following,
-              isPrivate: value,
-              statusEmoji: user.statusEmoji,
-              hasAcceptedTerms: user.hasAcceptedTerms,
-            );
-            await _firebaseService.updateUserProfile(updatedUser);
-          },
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSetEmojiButton(AppUser user) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 5),
-      child: ElevatedButton.icon(
-        icon: const Icon(Icons.emoji_emotions),
-        label: Text('Set Verification Emoji', style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.blue[100],
-          foregroundColor: Colors.blue[900],
-          minimumSize: const Size(double.infinity, 50),
-        ),
-        onPressed: () {
-          _showEmojiPicker(user);
-        },
-      ),
-    );
-  }
-
-  void _showEmojiPicker(AppUser user) {
-    final List<String> emojis = ['👑', '✈️', '🌍', '🔥', '💎', '🌟', '🚀', '🌴', '🌻', '🎒'];
+  void _showEditProfileSheet(AppUser user) {
     showModalBottomSheet(
       context: context,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (context) => Padding(
-        padding: const EdgeInsets.all(20),
+        padding: EdgeInsets.fromLTRB(24, 24, 24, MediaQuery.of(context).viewInsets.bottom + 24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Select Verification Emoji', style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 20),
-            Wrap(
-              spacing: 15,
-              runSpacing: 15,
-              children: emojis.map((emoji) => GestureDetector(
-                onTap: () async {
-                  Navigator.pop(context);
-                  final updatedUser = AppUser(
-                    uid: user.uid,
-                    displayName: user.displayName,
-                    email: user.email,
-                    photoUrl: user.photoUrl,
-                    bio: user.bio,
-                    tripsCount: user.tripsCount,
-                    followersCount: user.followersCount,
-                    badges: user.badges,
-                    verifiedScore: user.verifiedScore,
-                    gender: user.gender,
-                    dateOfBirth: user.dateOfBirth,
-                    locality: user.locality,
-                    isIdentityVerified: user.isIdentityVerified,
-                    isOnlyGirlsMode: user.isOnlyGirlsMode,
-                    following: user.following,
-                    isPrivate: user.isPrivate,
-                    statusEmoji: emoji,
-                    hasAcceptedTerms: user.hasAcceptedTerms,
-                  );
-                  await _firebaseService.updateUserProfile(updatedUser);
-                },
-                child: Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[100],
-                    shape: BoxShape.circle,
-                  ),
-                  child: Text(emoji, style: const TextStyle(fontSize: 32)),
-                ),
-              )).toList(),
+            Center(
+              child: Container(
+                width: 40, height: 4,
+                decoration: BoxDecoration(color: Theme.of(context).dividerColor, borderRadius: BorderRadius.circular(2)),
+              ),
             ),
             const SizedBox(height: 20),
+            Text('Edit Profile', style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 20),
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(color: Theme.of(context).primaryColor.withValues(alpha: 0.15), shape: BoxShape.circle),
+                child: Icon(Icons.camera_alt, color: Theme.of(context).primaryColor),
+              ),
+              title: Text('Change Photo / Avatar', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+              subtitle: Text('Update your profile picture', style: GoogleFonts.outfit(fontSize: 12, color: Theme.of(context).textTheme.bodyMedium?.color)),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () {
+                Navigator.pop(context);
+                _showAvatarPicker(user);
+              },
+            ),
+            const Divider(),
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(color: Colors.blue.withValues(alpha: 0.15), shape: BoxShape.circle),
+                child: const Icon(Icons.edit_note, color: Colors.blue),
+              ),
+              title: Text('Edit Bio', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+              subtitle: Text(user.bio.isNotEmpty ? user.bio : 'Add a bio', style: GoogleFonts.outfit(fontSize: 12, color: Theme.of(context).textTheme.bodyMedium?.color), maxLines: 1, overflow: TextOverflow.ellipsis),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () {
+                Navigator.pop(context);
+                _editBio(user);
+              },
+            ),
           ],
         ),
       ),
     );
   }
-  
+
+
+
+
   Widget _buildDeveloperTools() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10),
       child: ElevatedButton.icon(
         icon: const Icon(Icons.cloud_upload),
-        label: Text('Seed Database (Developer)', style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+        label: Text('Seed Database (Developer)', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.amber,
-          foregroundColor: Colors.black87,
+          backgroundColor: Theme.of(context).primaryColor,
+          foregroundColor: Theme.of(context).textTheme.bodyLarge?.color,
           minimumSize: const Size(double.infinity, 50),
         ),
         onPressed: () async {
@@ -439,20 +643,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
               children: [
                 const Icon(Icons.report_problem, color: Colors.red),
                 const SizedBox(width: 8),
-                Text('Report User', style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.red[800])),
+                Text('Report User', style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.red[800])),
               ],
             ),
             const SizedBox(height: 8),
-            Text('Why are you reporting this user? Your report is anonymous.', style: GoogleFonts.poppins(color: Colors.grey[600], fontSize: 13)),
+            Text('Why are you reporting this user? Your report is anonymous.', style: GoogleFonts.outfit(color: Theme.of(context).textTheme.bodyMedium?.color, fontSize: 13)),
             const SizedBox(height: 20),
             ...categories.map((category) => ListTile(
-              title: Text(category, style: GoogleFonts.poppins()),
+              title: Text(category, style: GoogleFonts.outfit()),
               trailing: const Icon(Icons.chevron_right),
               onTap: () async {
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('Report submitted for "$category". Thank you for keeping our community safe.', style: GoogleFonts.poppins()),
+                    content: Text('Report submitted for "$category". Thank you for keeping our community safe.', style: GoogleFonts.outfit()),
                     backgroundColor: Colors.green,
                   ),
                 );
@@ -465,178 +669,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildHeader(AppUser user, bool isOwnProfile) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
-      child: Column(
-        children: [
-          GestureDetector(
-            onTap: isOwnProfile ? () => _showAvatarPicker(user) : null,
-            child: Stack(
-              children: [
-                Container(
-                  decoration: (user.isOnlyGirlsMode && user.gender.toLowerCase() == 'female') ? BoxDecoration(
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.pinkAccent.withValues(alpha: 0.6),
-                        blurRadius: 20,
-                        spreadRadius: 5,
-                      ),
-                    ],
-                  ) : null,
-                  child: CircleAvatar(
-                    radius: 54,
-                    backgroundColor: (user.isOnlyGirlsMode && user.gender.toLowerCase() == 'female') ? Colors.pinkAccent : Colors.transparent,
-                    child: CircleAvatar(
-                      radius: 50,
-                      backgroundImage: NetworkImage((user.photoUrl.isNotEmpty && !user.photoUrl.contains('pravatar')) ? user.photoUrl : 'https://api.dicebear.com/9.x/avataaars/png?seed=${user.uid}'),
-                      onBackgroundImageError: (e, s) {},
-                    ),
-                  ),
-                ),
-                if (isOwnProfile)
-                  Positioned(
-                    bottom: 0,
-                    right: 0,
-                    child: Container(
-                      padding: const EdgeInsets.all(6),
-                      decoration: BoxDecoration(
-                        color: Colors.amber,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white, width: 2),
-                      ),
-                      child: const Icon(Icons.edit, size: 16, color: Colors.black),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 15),
-          if (user.statusEmoji.isNotEmpty)
-            Column(
-              children: [
-                Text(user.statusEmoji, style: const TextStyle(fontSize: 36)),
-                Text('Verified', style: GoogleFonts.poppins(fontSize: 10, color: Colors.blue, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 8),
-              ],
-            ).animate().scale(),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                user.displayName.isNotEmpty ? user.displayName : 'Traveler',
-                style: GoogleFonts.poppins(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              if (user.statusEmoji.isEmpty) ...[
-                const SizedBox(width: 5),
-                const Icon(Icons.verified, color: Colors.blue, size: 24),
-              ],
-            ],
-          ),
-          const SizedBox(height: 12),
-          // Personality Badge
-          GestureDetector(
-            onTap: isOwnProfile ? () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TravelPersonalityQuizScreen())) : null,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                color: Colors.purple.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.purple.withValues(alpha: 0.3)),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.psychology, color: Colors.purple, size: 18),
-                  const SizedBox(width: 6),
-                  Text(
-                    user.travelPersonality,
-                    style: GoogleFonts.poppins(
-                      color: Colors.purple[800],
-                      fontWeight: FontWeight.bold,
-                      fontSize: 13,
-                    ),
-                  ),
-                  if (isOwnProfile) ...[
-                    const SizedBox(width: 4),
-                    Icon(Icons.edit, color: Colors.purple[300], size: 14),
-                  ]
-                ],
-              ),
-            ),
-          ).animate().scale(delay: 200.ms),
-          const SizedBox(height: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: Colors.green.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: Colors.green),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.shield, color: Colors.green, size: 16),
-                const SizedBox(width: 4),
-                Text(
-                  'Trust Score: ${user.verifiedScore}/100',
-                  style: GoogleFonts.poppins(
-                    color: Colors.green,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 10),
-          GestureDetector(
-            onTap: isOwnProfile ? () => _editBio(user) : null,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Flexible(
-                  child: Text(
-                    user.bio.isNotEmpty ? user.bio : (isOwnProfile ? 'Tap to add your bio...' : 'World Traveler ✈️ | Explorer'),
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.poppins(color: Colors.grey[700], fontSize: 14),
-                  ),
-                ),
-                if (isOwnProfile) ...[
-                  const SizedBox(width: 6),
-                  Icon(Icons.edit, size: 14, color: Colors.grey[400]),
-                ]
-              ],
-            ),
-          ),
-          const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.star, color: Colors.amber, size: 16),
-              const SizedBox(width: 4),
-              Text(
-                '${user.reputationScore.toStringAsFixed(1)} Reputation',
-                style: GoogleFonts.poppins(color: Colors.amber[800], fontWeight: FontWeight.bold, fontSize: 12),
-              ),
-              const SizedBox(width: 12),
-              Icon(Icons.access_time, color: Colors.grey, size: 16),
-              const SizedBox(width: 4),
-              Text(
-                user.responseTime,
-                style: GoogleFonts.poppins(color: Colors.grey[600], fontSize: 12),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
+
 
   void _editBio(AppUser user) {
     final bioController = TextEditingController(text: user.bio);
@@ -645,7 +678,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       builder: (context) {
         return AlertDialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: Text('Edit Bio', style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+          title: Text('Edit Bio', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
           content: TextField(
             controller: bioController,
             maxLength: 150,
@@ -658,7 +691,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+              child: Text('Cancel', style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color)),
             ),
             ElevatedButton(
               onPressed: () async {
@@ -695,8 +728,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 await _firebaseService.updateUserProfile(updatedUser);
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.amber,
-                foregroundColor: Colors.black87,
+                backgroundColor: Theme.of(context).primaryColor,
+                foregroundColor: Theme.of(context).textTheme.bodyLarge?.color,
               ),
               child: const Text('Save'),
             ),
@@ -732,7 +765,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         const SizedBox(height: 4),
         Text(
           label,
-          style: TextStyle(color: Colors.grey[600], fontSize: 14),
+          style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color, fontSize: 14),
         ),
       ],
     );
@@ -808,11 +841,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 margin: const EdgeInsets.symmetric(horizontal: 5),
                 padding: const EdgeInsets.all(15),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: Theme.of(context).cardColor,
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.grey.withValues(alpha: 0.1),
+                      color: Theme.of(context).shadowColor.withValues(alpha: 0.1),
                       spreadRadius: 2,
                       blurRadius: 10,
                     ),
@@ -833,14 +866,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
                         const Spacer(),
-                        const Icon(Icons.format_quote, color: Colors.amber, size: 24),
+                        Icon(Icons.format_quote, color: Theme.of(context).primaryColor, size: 24),
                       ],
                     ),
                     const SizedBox(height: 10),
                     Expanded(
                       child: Text(
                         testimonial['review']!,
-                        style: TextStyle(color: Colors.grey[700], fontStyle: FontStyle.italic),
+                        style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color, fontStyle: FontStyle.italic),
                         overflow: TextOverflow.fade,
                       ),
                     ),
@@ -876,9 +909,46 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           itemCount: _galleryImages.length,
           itemBuilder: (context, index) {
-            return Image.network(
-              _galleryImages[index],
-              fit: BoxFit.cover,
+            return GestureDetector(
+              onTap: () {
+                showDialog(
+                  context: context,
+                  builder: (context) => Dialog(
+                    backgroundColor: Colors.transparent,
+                    insetPadding: EdgeInsets.zero,
+                    child: Stack(
+                      children: [
+                        GestureDetector(
+                          onTap: () => Navigator.pop(context),
+                          child: InteractiveViewer(
+                            panEnabled: true,
+                            minScale: 0.5,
+                            maxScale: 4,
+                            child: Center(
+                              child: Image.network(
+                                _galleryImages[index],
+                                fit: BoxFit.contain,
+                              ),
+                            ),
+                          ),
+                        ),
+                        Positioned(
+                          top: 40,
+                          right: 20,
+                          child: IconButton(
+                            icon: Icon(Icons.close, color: Theme.of(context).cardColor, size: 30),
+                            onPressed: () => Navigator.pop(context),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+              child: Image.network(
+                _galleryImages[index],
+                fit: BoxFit.cover,
+              ),
             );
           },
         ),
@@ -907,14 +977,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('Customize Avatar', style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold)),
+                      Text('Customize Avatar', style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold)),
                       TextButton.icon(
                         onPressed: () async {
                           Navigator.pop(ctx);
                           await _pickAndUploadImage(user);
                         },
-                        icon: const Icon(Icons.photo_library, color: Colors.amber, size: 18),
-                        label: Text('Upload Image', style: GoogleFonts.poppins(color: Colors.amber, fontWeight: FontWeight.bold)),
+                        icon: Icon(Icons.photo_library, color: Theme.of(context).primaryColor, size: 18),
+                        label: Text('Upload Image', style: GoogleFonts.outfit(color: Theme.of(context).primaryColor, fontWeight: FontWeight.bold)),
                       ),
                     ],
                   ),
@@ -931,7 +1001,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           child: ChoiceChip(
                             label: Text(style),
                             selected: isSelected,
-                            selectedColor: Colors.amber,
+                            selectedColor: Theme.of(context).primaryColor,
                             onSelected: (selected) {
                               if (selected) {
                                 setModalState(() => selectedStyle = style);
@@ -985,7 +1055,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             await _firebaseService.updateUserProfile(updated);
                           },
                           child: CircleAvatar(
-                            backgroundColor: Colors.grey[100],
+                            backgroundColor: Theme.of(context).cardColor,
                             backgroundImage: NetworkImage(url),
                           ),
                         );
@@ -1002,10 +1072,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         seedOffset += 9;
                       });
                     },
-                    icon: const Icon(Icons.shuffle, color: Colors.black87),
-                    label: Text('Shuffle', style: GoogleFonts.poppins(color: Colors.black87, fontWeight: FontWeight.bold)),
+                    icon: Icon(Icons.shuffle, color: Theme.of(context).textTheme.bodyLarge?.color),
+                    label: Text('Shuffle', style: GoogleFonts.outfit(color: Theme.of(context).textTheme.bodyLarge?.color, fontWeight: FontWeight.bold)),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.amber,
+                      backgroundColor: Theme.of(context).primaryColor,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                     ),
@@ -1031,7 +1101,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       showDialog(
         context: context,
         barrierDismissible: false,
-        builder: (context) => const Center(child: CircularProgressIndicator(color: Colors.amber)),
+        builder: (context) => Center(child: CircularProgressIndicator(color: Theme.of(context).primaryColor)),
       );
 
       final file = File(pickedFile.path);
@@ -1069,7 +1139,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (!mounted) return;
       Navigator.pop(context); // Close loading dialog
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to upload image: $e', style: GoogleFonts.poppins()), backgroundColor: Colors.red),
+        SnackBar(content: Text('Failed to upload image: $e', style: GoogleFonts.outfit()), backgroundColor: Colors.red),
       );
     }
   }
@@ -1080,7 +1150,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       children: [
         Padding(
           padding: const EdgeInsets.all(20),
-          child: Text('Posts', style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.bold)),
+          child: Text('Posts', style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.bold)),
         ),
         StreamBuilder<List<SocialPost>>(
           stream: _firebaseService.getUserPosts(user.uid),
@@ -1090,7 +1160,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             if (posts.isEmpty) {
               return Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                child: Text('No posts yet.', style: GoogleFonts.poppins(color: Colors.grey)),
+                child: Text('No posts yet.', style: GoogleFonts.outfit(color: Theme.of(context).textTheme.bodyMedium?.color)),
               );
             }
             return ListView.builder(
@@ -1103,16 +1173,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.grey[50],
+                    color: Theme.of(context).cardColor,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.grey[200]!),
+                    border: Border.all(color: Theme.of(context).dividerColor),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(post.content, style: GoogleFonts.poppins(fontSize: 14)),
+                      Text(post.content, style: GoogleFonts.outfit(fontSize: 14)),
                       const SizedBox(height: 8),
-                      Text('${post.likesCount} Likes • ${post.commentsCount} Comments', style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey)),
+                      Text('${post.likesCount} Likes • ${post.commentsCount} Comments', style: GoogleFonts.outfit(fontSize: 12, color: Theme.of(context).textTheme.bodyMedium?.color)),
                     ],
                   ),
                 );
@@ -1136,7 +1206,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Reviews', style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.bold)),
+              Text('Reviews', style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.bold)),
               if (!isOwnProfile)
                 TextButton(
                   onPressed: () {
@@ -1151,7 +1221,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: List.generate(5, (index) => IconButton(
-                                  icon: Icon(index < selectedRating ? Icons.star : Icons.star_border, color: Colors.amber),
+                                  icon: Icon(index < selectedRating ? Icons.star : Icons.star_border, color: Theme.of(context).primaryColor),
                                   onPressed: () => setState(() => selectedRating = index + 1.0),
                                 )),
                               ),
@@ -1181,7 +1251,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   createdAt: DateTime.now(),
                                 );
                                 
-                                await _firebaseService.addReview(review);
+                                await _firebaseService.addUserReview(review);
                                 if (!context.mounted) return;
                                 Navigator.pop(context);
                               },
@@ -1192,7 +1262,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                     );
                   },
-                  child: Text('+ Write', style: GoogleFonts.poppins(color: Colors.amber[800], fontWeight: FontWeight.bold)),
+                  child: Text('+ Write', style: GoogleFonts.outfit(color: Theme.of(context).primaryColorDark, fontWeight: FontWeight.bold)),
                 ),
             ],
           ),
@@ -1205,7 +1275,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             if (reviews.isEmpty) {
               return Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                child: Text('No reviews yet.', style: GoogleFonts.poppins(color: Colors.grey)),
+                child: Text('No reviews yet.', style: GoogleFonts.outfit(color: Theme.of(context).textTheme.bodyMedium?.color)),
               );
             }
             return ListView.builder(
@@ -1218,9 +1288,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.grey[50],
+                    color: Theme.of(context).cardColor,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.grey[200]!),
+                    border: Border.all(color: Theme.of(context).dividerColor),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -1237,21 +1307,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(review.reviewerName, style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 14)),
+                                Text(review.reviewerName, style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 14)),
                                 Row(
                                   children: [
-                                    const Icon(Icons.star, color: Colors.amber, size: 12),
-                                    Text(review.rating.toString(), style: GoogleFonts.poppins(fontSize: 12)),
+                                    Icon(Icons.star, color: Theme.of(context).primaryColor, size: 12),
+                                    Text(review.rating.toString(), style: GoogleFonts.outfit(fontSize: 12)),
                                   ],
                                 ),
                               ],
                             ),
                           ),
-                          Text(timeago.format(review.createdAt), style: GoogleFonts.poppins(fontSize: 10, color: Colors.grey)),
+                          Text(timeago.format(review.createdAt), style: GoogleFonts.outfit(fontSize: 10, color: Theme.of(context).textTheme.bodyMedium?.color)),
                         ],
                       ),
                       const SizedBox(height: 8),
-                      Text(review.text, style: GoogleFonts.poppins(fontSize: 14)),
+                      Text(review.text, style: GoogleFonts.outfit(fontSize: 14)),
                     ],
                   ),
                 );
@@ -1263,3 +1333,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 }
+
+
+
+

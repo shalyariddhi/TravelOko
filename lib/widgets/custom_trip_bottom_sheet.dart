@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../services/firebase_service.dart';
 import '../screens/generated_plan_screen.dart';
 import '../services/places_api_service.dart';
 
 class CustomTripBottomSheet extends StatefulWidget {
-  const CustomTripBottomSheet({super.key});
+  final String? initialDestination;
+  const CustomTripBottomSheet({super.key, this.initialDestination});
 
   @override
   State<CustomTripBottomSheet> createState() => _CustomTripBottomSheetState();
@@ -14,13 +14,20 @@ class CustomTripBottomSheet extends StatefulWidget {
 class _CustomTripBottomSheetState extends State<CustomTripBottomSheet> {
   final _budgetController = TextEditingController(text: '15000');
   final _destinationController = TextEditingController();
-  final FirebaseService _firebaseService = FirebaseService();
   final PlacesApiService _placesApiService = PlacesApiService();
   
   int _travelers = 2;
   double _days = 3;
   String _selectedStyle = 'Relaxing';
   bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialDestination != null) {
+      _destinationController.text = widget.initialDestination!;
+    }
+  }
 
   // Comprehensive list of Indian cities
   static final List<String> _allIndiaCities = [

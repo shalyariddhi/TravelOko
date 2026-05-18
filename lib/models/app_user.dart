@@ -25,6 +25,12 @@ class AppUser {
   final String travelPersonality;
   final bool isBanned;
   final List<String> reportedUsers;
+  final Map<String, bool> notifications;
+  final List<double> embedding;
+  final Map<String, double> feedWeights;
+  final String experimentGroup;
+  final List<String> likedPostIds;
+  final bool isPro;
 
   AppUser({
     required this.uid,
@@ -53,6 +59,12 @@ class AppUser {
     this.travelPersonality = 'The Explorer',
     this.isBanned = false,
     this.reportedUsers = const [],
+    this.notifications = const {'newTrips': true, 'newFollowers': true},
+    this.embedding = const [],
+    this.feedWeights = const {'w1': 0.4, 'w2': 0.3, 'w3': 2.0, 'w4': 0.1},
+    this.experimentGroup = 'A',
+    this.likedPostIds = const [],
+    this.isPro = false,
   });
 
   factory AppUser.fromMap(Map<String, dynamic> data, String uid) {
@@ -60,7 +72,9 @@ class AppUser {
       uid: uid,
       displayName: data['displayName'] ?? '',
       email: data['email'] ?? '',
-      photoUrl: data['photoUrl'] ?? '',
+      photoUrl: (data['photoUrl']?.toString().contains('pravatar') ?? false)
+          ? 'https://api.dicebear.com/9.x/avataaars/png?seed=$uid'
+          : data['photoUrl'] ?? '',
       bio: data['bio'] ?? '',
       tripsCount: (data['tripsCount'] ?? 0).toInt(),
       followersCount: (data['followersCount'] ?? 0).toInt(),
@@ -83,6 +97,12 @@ class AppUser {
       travelPersonality: data['travelPersonality'] ?? 'The Explorer',
       isBanned: data['isBanned'] ?? false,
       reportedUsers: List<String>.from(data['reportedUsers'] ?? []),
+      notifications: Map<String, bool>.from(data['notifications'] ?? {'newTrips': true, 'newFollowers': true}),
+      embedding: (data['embedding'] as List<dynamic>?)?.map((e) => (e as num).toDouble()).toList() ?? [],
+      feedWeights: (data['feedWeights'] as Map<String, dynamic>?)?.map((key, value) => MapEntry(key, (value as num).toDouble())) ?? {'w1': 0.4, 'w2': 0.3, 'w3': 2.0, 'w4': 0.1},
+      experimentGroup: data['experimentGroup'] ?? 'A',
+      likedPostIds: List<String>.from(data['likedPostIds'] ?? []),
+      isPro: data['isPro'] ?? false,
     );
   }
 
@@ -113,6 +133,12 @@ class AppUser {
       'travelPersonality': travelPersonality,
       'isBanned': isBanned,
       'reportedUsers': reportedUsers,
+      'notifications': notifications,
+      'embedding': embedding,
+      'feedWeights': feedWeights,
+      'experimentGroup': experimentGroup,
+      'likedPostIds': likedPostIds,
+      'isPro': isPro,
     };
   }
 }

@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/app_user.dart';
 import '../services/firebase_service.dart';
-import '../models/chat_message.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+
 
 class ChatScreen extends StatefulWidget {
   final AppUser targetUser;
@@ -23,14 +22,7 @@ class _ChatScreenState extends State<ChatScreen> {
     final currentUserId = _firebaseService.currentUser?.uid;
     if (currentUserId == null) return;
 
-    final msgId = FirebaseFirestore.instance.collection('chats').doc().id;
-    final message = ChatMessage(
-      id: msgId,
-      senderId: currentUserId,
-      receiverId: widget.targetUser.uid,
-      text: _messageController.text.trim(),
-      timestamp: DateTime.now(),
-    );
+
 
     // Mock send message - in reality, save to Firebase
     _messageController.clear();
@@ -67,7 +59,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 ),
                 const SizedBox(width: 8),
                 Container(
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     color: Colors.amber,
                     shape: BoxShape.circle,
                   ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'location_map_screen.dart';
 
 class OfflineMapsScreen extends StatefulWidget {
   final String destination;
@@ -126,9 +127,17 @@ class _OfflineMapsScreenState extends State<OfflineMapsScreen> {
               if (_isDownloaded)
                 ElevatedButton.icon(
                   onPressed: () {
-                    // Open map simulation
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Opening offline map view... (Mock)'))
+                    // Push LocationMapScreen
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => LocationMapScreen(
+                          locationData: {
+                            'name': widget.destination,
+                            // Ideally, actual coords would be passed here if available
+                          },
+                        ),
+                      ),
                     );
                   },
                   icon: const Icon(Icons.map),

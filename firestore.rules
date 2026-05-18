@@ -1,0 +1,149 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── USERS ──────────────────────────────────────────────────
+    match /users/{userId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth.uid == userId;
+
+      match /tokens/{tokenId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+
+      match /reviews/{reviewId} {
+        allow read, write: if request.auth != null;
+      }
+
+      match /following/{followId} {
+        allow read, write: if request.auth != null;
+      }
+
+      match /followers/{followerId} {
+        allow read, write: if request.auth != null;
+      }
+    }
+
+    // ── TRIPS (standard + collaborative) ───────────────────────
+    match /trips/{tripId} {
+      allow read: if request.auth != null;
+
+      allow create: if request.auth != null
+        && request.resource.data.organizerId == request.auth.uid;
+
+      allow update: if request.auth != null
+        && (resource.data.organizerId == request.auth.uid
+            || request.auth.uid in resource.data.members);
+
+      allow delete: if request.auth != null
+        && resource.data.organizerId == request.auth.uid;
+
+      match /itinerary/{itemId} {
+        allow read: if request.auth != null
+          && request.auth.uid in get(/databases/$(database)/documents/trips/$(tripId)).data.members;
+
+        allow create: if request.auth != null
+          && request.auth.uid in get(/databases/$(database)/documents/trips/$(tripId)).data.members;
+
+        allow update, delete: if request.auth != null
+          && resource.data.addedBy == request.auth.uid;
+      }
+
+      match /members/{memberId} {
+        allow read, write: if request.auth != null;
+      }
+    }
+
+    // ── MEMBERS COLLECTION GROUP ──────────────────────────────
+    match /{path=**}/members/{memberId} {
+      allow read: if request.auth != null;
+    }
+
+    // ── BOOKED STAYS ─────────────────────────────────────────
+    match /booked_stays/{stayId} {
+      allow read, write: if request.auth != null;
+    }
+
+    // ── COMMUNITY PLACES ─────────────────────────────────────
+    match /places/{placeId} {
+      allow read: if request.auth != null && resource.data.isHidden == false;
+      allow create: if request.auth != null;
+      allow update: if request.auth != null
+        && resource.data.createdBy == request.auth.uid;
+      allow delete: if request.auth != null
+        && resource.data.createdBy == request.auth.uid;
+
+      match /reviews/{reviewId} {
+        allow read: if request.auth != null;
+        allow create: if request.auth != null;
+        allow delete: if request.auth != null
+          && resource.data.userId == request.auth.uid;
+      }
+    }
+
+    // ── REPORTS ──────────────────────────────────────────────
+    match /reports/{reportId} {
+      allow create: if request.auth != null;
+      allow read: if false;
+    }
+
+    // ── SOCIAL FEED (Posts) ───────────────────────────────────
+    match /posts/{postId} {
+      allow read: if request.auth != null;
+
+      allow create: if request.auth != null
+        && request.resource.data.userId == request.auth.uid;
+      allow delete: if request.auth != null
+        && resource.data.userId == request.auth.uid;
+
+      allow update: if request.auth != null;
+
+      match /comments/{commentId} {
+        allow read: if request.auth != null;
+        allow create: if request.auth != null
+          && request.resource.data.userId == request.auth.uid;
+        allow delete: if request.auth != null
+          && resource.data.userId == request.auth.uid;
+      }
+
+      match /views/{userId} {
+        allow read: if request.auth != null;
+        allow write: if request.auth != null && request.auth.uid == userId;
+      }
+    }
+
+    // ── COMMENTS COLLECTION GROUP (for activity feed) ─────────
+    match /{path=**}/comments/{commentId} {
+      allow read: if request.auth != null;
+    }
+
+    // ── AI TRIPS ──────────────────────────────────────────────
+    match /ai_trips/{tripId} {
+      allow read, write: if request.auth != null
+        && resource.data.userId == request.auth.uid;
+      allow create: if request.auth != null;
+    }
+
+    // ── ROUTE CACHE ───────────────────────────────────────────
+    match /route_cache/{key} {
+      allow read, write: if request.auth != null;
+    }
+
+    // ── GEOAPIFY CACHE ────────────────────────────────────────
+    match /geoapify_cache/{key} {
+      allow read, write: if request.auth != null;
+    }
+
+    // ── AFFILIATE CLICKS (Revenue Analytics) ─────────────────
+    // Users can only create click events; nobody can read (admin only via console).
+    match /affiliate_clicks/{clickId} {
+      allow create: if request.auth != null;
+      allow read: if false; // Admin-only via Firebase Console
+    }
+
+    // ── NOTIFICATIONS ─────────────────────────────────────────
+    match /notifications/{notificationId} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}

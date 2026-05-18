@@ -8,6 +8,8 @@ class MockData {
       id: 'm1',
       title: 'Parvati Valley Backpacking',
       destination: 'Kasol, Himachal Pradesh',
+      lat: 32.0098,
+      lng: 77.3149,
       imageUrl:
           'https://images.unsplash.com/photo-1626714486895-e4d0b135c34e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
       organizerId: 'org1',
@@ -41,6 +43,8 @@ class MockData {
       id: 'm2',
       title: 'Girls Goa Getaway',
       destination: 'North Goa',
+      lat: 15.5494,
+      lng: 73.7538,
       imageUrl:
           'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
       organizerId: 'org2',
@@ -74,6 +78,8 @@ class MockData {
       id: 'm3',
       title: 'Royal Rajasthan Heritage',
       destination: 'Jaipur–Jodhpur–Udaipur',
+      lat: 26.9124,
+      lng: 75.7873,
       imageUrl:
           'https://images.unsplash.com/photo-1599661559684-25e2f7035541?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
       organizerId: 'org3',
@@ -108,6 +114,8 @@ class MockData {
       id: 'm4',
       title: 'Kerala Backwaters & Munnar',
       destination: 'Alleppey & Munnar, Kerala',
+      lat: 10.0889,
+      lng: 77.0595,
       imageUrl:
           'https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
       organizerId: 'org4',
@@ -127,6 +135,8 @@ class MockData {
       id: 'm5',
       title: 'Spiti Valley Expedition',
       destination: 'Spiti Valley, Himachal Pradesh',
+      lat: 32.2217,
+      lng: 78.0381,
       imageUrl:
           'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
       organizerId: 'org5',
@@ -146,6 +156,8 @@ class MockData {
       id: 'm4',
       title: 'Kerala Backwaters & Tea Estates',
       destination: 'Munnar & Alleppey, Kerala',
+      lat: 9.4981,
+      lng: 76.3388,
       imageUrl: 'https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?auto=format&fit=crop&w=800&q=80',
       organizerId: 'org4',
       organizerName: 'Southern Trails',
@@ -171,6 +183,8 @@ class MockData {
       id: 'm5',
       title: 'Meghalaya Chasing Waterfalls',
       destination: 'Shillong & Cherrapunji',
+      lat: 25.2702,
+      lng: 91.7323,
       imageUrl: 'https://images.unsplash.com/photo-1590050752117-238cb0fb12b1?auto=format&fit=crop&w=800&q=80',
       organizerId: 'org5',
       organizerName: 'Northeast Explorers',
@@ -220,7 +234,7 @@ class MockData {
     {'name': 'Andaman', 'image': 'https://picsum.photos/seed/andaman/500/500'},
     {'name': 'Ooty', 'image': 'https://picsum.photos/seed/ooty/500/500'},
     {'name': 'Gulmarg', 'image': 'https://images.unsplash.com/photo-1550184658-ff6132a71714?w=500&q=80'},
-    {'name': 'Auli', 'image': 'https://images.unsplash.com/photo-1610640951163-95624ebc6e83?w=500&q=80'},
+    {'name': 'Auli', 'image': 'https://picsum.photos/seed/auli/500/500'},
   ];
 
   static final List<Map<String, String>> hiddenGems = [
@@ -228,9 +242,9 @@ class MockData {
     {'name': 'Meghalaya', 'image': 'https://images.unsplash.com/photo-1590050752117-238cb0fb12b1?w=500&q=80'},
     {'name': 'Gokarna', 'image': 'https://images.unsplash.com/photo-1561501878-aabd62634533?w=500&q=80'},
     {'name': 'Ziro Valley', 'image': 'https://picsum.photos/seed/ziro/500/500'},
-    {'name': 'Majuli', 'image': 'https://images.unsplash.com/photo-1614704043997-7e6d1eb2f01f?w=500&q=80'},
+    {'name': 'Majuli', 'image': 'https://images.unsplash.com/photo-1590418606746-018840f988f0?w=500&q=80'},
     {'name': 'Tawang', 'image': 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=500&q=80'},
-    {'name': 'Khajjiar', 'image': 'https://images.unsplash.com/photo-1596783049106-a8d6b82522c0?w=500&q=80'},
+    {'name': 'Khajjiar', 'image': 'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=500&q=80'},
   ];
 
   static final List<Map<String, dynamic>> accommodations = [
@@ -263,7 +277,7 @@ class MockData {
     {
       'name': 'Cozy Himalayan Cabin',
       'location': 'Manali, Himachal Pradesh',
-      'type': 'Rental',
+      'type': 'Dormitory',
       'priceNum': 3200,
       'price': '₹3,200',
       'rating': 4.8,
@@ -276,7 +290,7 @@ class MockData {
     {
       'name': 'Urban Loft Apartment',
       'location': 'Bandra, Mumbai',
-      'type': 'Rental',
+      'type': 'Dormitory',
       'priceNum': 5800,
       'price': '₹5,800',
       'rating': 4.7,
@@ -328,7 +342,7 @@ class MockData {
     {
       'name': 'Kerala Backwaters Houseboat',
       'location': 'Alleppey, Kerala',
-      'type': 'Rental',
+      'type': 'Dormitory',
       'priceNum': 8500,
       'price': '₹8,500',
       'rating': 4.9,
@@ -354,7 +368,7 @@ class MockData {
     {
       'name': 'Munnar Tea Estate Bungalow',
       'location': 'Munnar, Kerala',
-      'type': 'Rental',
+      'type': 'Dormitory',
       'priceNum': 4500,
       'price': '₹4,500',
       'rating': 4.8,
@@ -393,7 +407,7 @@ class MockData {
     {
       'name': 'Spiti Valley Homestay',
       'location': 'Kaza, Spiti',
-      'type': 'Rental',
+      'type': 'Dormitory',
       'priceNum': 1500,
       'price': '₹1,500',
       'rating': 4.6,
@@ -406,7 +420,7 @@ class MockData {
     {
       'name': 'Wayanad Treehouse',
       'location': 'Wayanad, Kerala',
-      'type': 'Rental',
+      'type': 'Dormitory',
       'priceNum': 6200,
       'price': '₹6,200',
       'rating': 4.8,
@@ -458,7 +472,7 @@ class MockData {
     {
       'name': 'Darjeeling Tea Retreat',
       'location': 'Darjeeling, West Bengal',
-      'type': 'Rental',
+      'type': 'Dormitory',
       'priceNum': 3500,
       'price': '₹3,500',
       'rating': 4.7,

@@ -26,7 +26,9 @@ class UserReview {
       id: id,
       reviewerId: data['reviewerId'] ?? '',
       reviewerName: data['reviewerName'] ?? 'Traveler',
-      reviewerPhotoUrl: data['reviewerPhotoUrl'] ?? '',
+      reviewerPhotoUrl: (data['reviewerPhotoUrl']?.toString().contains('pravatar') ?? false)
+          ? 'https://api.dicebear.com/9.x/avataaars/png?seed=${data['reviewerId']}'
+          : data['reviewerPhotoUrl'] ?? '',
       revieweeId: data['revieweeId'] ?? '',
       rating: (data['rating'] ?? 5.0).toDouble(),
       text: data['text'] ?? '',

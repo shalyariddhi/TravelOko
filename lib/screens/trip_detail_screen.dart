@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
+import '../utils/cached_tile_layer.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../models/trip.dart';
 import '../services/firebase_service.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 import 'budget_tracker_screen.dart';
 import 'packing_checklist_screen.dart';
 import 'offline_maps_screen.dart';
+import 'location_map_screen.dart';
+import '../services/calendar_service.dart';
 
 class TripDetailScreen extends StatefulWidget {
   final Trip trip;
@@ -42,6 +47,13 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
             pinned: true,
             backgroundColor: Colors.black,
             iconTheme: const IconThemeData(color: Colors.white),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.event_available),
+                tooltip: 'Add to Calendar',
+                onPressed: () => CalendarService.exportTripToICS(trip),
+              ),
+            ],
             flexibleSpace: FlexibleSpaceBar(
               background: Stack(
                 fit: StackFit.expand,
@@ -219,49 +231,153 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
                     const SizedBox(height: 20),
                   ],
 
-                  // Booked Stays & Maps
-                  Text('Confirmed Stays & Maps',
+                  // Interactive Map & Stays
+                  Text('Trip Location & Stays',
                       style: GoogleFonts.poppins(
                           fontWeight: FontWeight.bold, fontSize: 16)),
                   const SizedBox(height: 10),
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.blue[50],
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: Colors.blue[200]!),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
+                  if (trip.lat != null && trip.lng != null)
+                    Container(
+                      height: 220,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.1),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          )
+                        ],
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: Stack(
                           children: [
-                            const Icon(Icons.hotel, color: Colors.blue, size: 20),
-                            const SizedBox(width: 8),
-                            Text('Luxury Villa Stay Included',
-                                style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: Colors.blue[900])),
+                            FlutterMap(
+                              options: MapOptions(
+                                initialCenter: LatLng(trip.lat!, trip.lng!),
+                                initialZoom: 12,
+                                interactionOptions: const InteractionOptions(
+                                  flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
+                                ),
+                              ),
+                              children: [
+                                cachedTileLayer(),
+                                MarkerLayer(
+                                  markers: [
+                                    Marker(
+                                      point: LatLng(trip.lat!, trip.lng!),
+                                      width: 60,
+                                      height: 60,
+                                      child: const Icon(
+                                        Icons.location_on,
+                                        size: 40,
+                                        color: Colors.amber,
+                                      ).animate(onPlay: (c) => c.repeat(reverse: true)).scaleXY(begin: 1.0, end: 1.2, duration: 800.ms),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                            // Gradient overlay for bottom section
+                            Positioned(
+                              bottom: 0,
+                              left: 0,
+                              right: 0,
+                              height: 80,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topCenter,
+                                    end: Alignment.bottomCenter,
+                                    colors: [
+                                      Colors.transparent,
+                                      Colors.black.withValues(alpha: 0.8),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                            Positioned(
+                              bottom: 12,
+                              left: 12,
+                              right: 12,
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Row(
+                                    children: [
+                                      const Icon(Icons.hotel, color: Colors.white, size: 16),
+                                      const SizedBox(width: 4),
+                                      Text('Luxury Villa Stay', style: GoogleFonts.poppins(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600)),
+                                    ],
+                                  ),
+                                  ElevatedButton.icon(
+                                    onPressed: () {
+                                      Navigator.push(context, MaterialPageRoute(builder: (_) => LocationMapScreen(
+                                        locationData: {
+                                          'name': trip.destination,
+                                          'lat': trip.lat,
+                                          'lng': trip.lng,
+                                        },
+                                      )));
+                                    },
+                                    icon: const Icon(Icons.fullscreen, size: 16),
+                                    label: Text('Expand Map', style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.bold)),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.amber,
+                                      foregroundColor: Colors.black87,
+                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+                                      minimumSize: const Size(0, 32),
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ],
                         ),
-                        const SizedBox(height: 12),
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton.icon(
-                            onPressed: () {
-                              Navigator.push(context, MaterialPageRoute(builder: (_) => OfflineMapsScreen(destination: trip.destination)));
-                            },
-                            icon: const Icon(Icons.map_outlined),
-                            label: const Text('Download Offline Map & Stays'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.blue[600],
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                    ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.1)
+                  else
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.blue[50],
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Colors.blue[200]!),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              const Icon(Icons.hotel, color: Colors.blue, size: 20),
+                              const SizedBox(width: 8),
+                              Text('Luxury Villa Stay Included',
+                                  style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: Colors.blue[900])),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton.icon(
+                              onPressed: () {
+                                Navigator.push(context, MaterialPageRoute(builder: (_) => OfflineMapsScreen(destination: trip.destination)));
+                              },
+                              icon: const Icon(Icons.map_outlined),
+                              label: const Text('Download Offline Map & Stays'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.blue[600],
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              ),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
                   const SizedBox(height: 24),
 
                   // Planning Tools
@@ -397,10 +513,10 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
                                 trip.id,
                                 itineraryId: _selectedItineraryId,
                               );
-                              if (mounted) {
-                                if (success) {
-                                  setState(() => _joined = true);
-                                  ScaffoldMessenger.of(context).showSnackBar(
+                              if (!context.mounted) return;
+                              if (success) {
+                                setState(() => _joined = true);
+                                ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
                                       content: Text('Joined "${trip.title}"! 🎉', style: GoogleFonts.poppins()),
                                       backgroundColor: Colors.green,
@@ -412,9 +528,8 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
                                       content: Text('Failed to join trip.', style: GoogleFonts.poppins()),
                                       backgroundColor: Colors.red,
                                     ),
-                                  );
-                                }
-                              }
+                                    );
+                                  }
                             },
                       style: ElevatedButton.styleFrom(
                         backgroundColor:

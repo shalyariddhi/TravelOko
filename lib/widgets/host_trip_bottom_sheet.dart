@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
@@ -118,12 +119,16 @@ class _HostTripBottomSheetState extends State<HostTripBottomSheet> {
   Widget build(BuildContext context) {
     final bottomPadding = MediaQuery.of(context).viewInsets.bottom;
     
-    return Container(
-      padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + bottomPadding),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
+    return ClipRRect(
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+        child: Container(
+          padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + bottomPadding),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.8), // Semi-transparent for glass effect
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          ),
       child: SingleChildScrollView(
         child: Form(
           key: _formKey,
@@ -240,6 +245,8 @@ class _HostTripBottomSheetState extends State<HostTripBottomSheet> {
             ],
           ),
         ),
+      ),
+      ),
       ),
     );
   }

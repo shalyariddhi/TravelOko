@@ -106,112 +106,191 @@ class _ExploreScreenState extends State<ExploreScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF6F7F9),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // ── Header + Search ──
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      if (widget.showOnlyTrips)
-                        Padding(
-                          padding: const EdgeInsets.only(right: 12),
-                          child: IconButton(
-                            icon: const Icon(Icons.arrow_back_ios, color: Colors.black87),
-                            onPressed: () => Navigator.pop(context),
+            Container(
+              decoration: BoxDecoration(
+                color: Theme.of(context).scaffoldBackgroundColor,
+              ),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        if (widget.showOnlyTrips)
+                          Padding(
+                            padding: const EdgeInsets.only(right: 12),
+                            child: GestureDetector(
+                              onTap: () => Navigator.pop(context),
+                              child: Container(
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).brightness == Brightness.dark
+                                      ? Colors.white.withValues(alpha: 0.08)
+                                      : Colors.black.withValues(alpha: 0.06),
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
+                                child: Icon(
+                                  Icons.arrow_back_ios_new_rounded,
+                                  color: Theme.of(context).brightness == Brightness.dark
+                                      ? Colors.white
+                                      : Colors.black87,
+                                  size: 18,
+                                ),
+                              ),
+                            ),
+                          ),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              ShaderMask(
+                                shaderCallback: (bounds) => const LinearGradient(
+                                  colors: [Color(0xFFFFD700), Color(0xFFFF8C00), Color(0xFFFF4500)],
+                                ).createShader(bounds),
+                                child: Text(
+                                  widget.showOnlyTrips ? 'Community Trips' : 'Discover India',
+                                  style: GoogleFonts.outfit(
+                                    fontSize: 28,
+                                    fontWeight: FontWeight.w900,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                              Text(
+                                'Explore endless adventures across the country',
+                                style: GoogleFonts.outfit(
+                                  fontSize: 13,
+                                  color: Theme.of(context).brightness == Brightness.dark
+                                      ? Colors.white38
+                                      : Colors.black45,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('Discover India',
-                                style: GoogleFonts.poppins(
-                                    fontSize: 28, fontWeight: FontWeight.bold)),
-                            Text('Explore endless adventures across the country',
-                                style: GoogleFonts.poppins(
-                                    fontSize: 14, color: Colors.grey[600])),
+                      ],
+                    ),
+                    const SizedBox(height: 14),
+                    // Premium search bar
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.white.withValues(alpha: 0.07)
+                            : Colors.white,
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white.withValues(alpha: 0.10)
+                              : Colors.black.withValues(alpha: 0.08),
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFFFF8C00).withValues(alpha: 0.06),
+                            blurRadius: 16,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: TextField(
+                        controller: _searchController,
+                        onChanged: _onSearchChanged,
+                        style: GoogleFonts.outfit(
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white
+                              : Colors.black87,
+                          fontSize: 14,
+                        ),
+                        decoration: InputDecoration(
+                          hintText: (widget.showOnlyTrips || _tabController.index == 0)
+                              ? 'Search trips, destinations in India…'
+                              : _tabController.index == 1
+                                  ? 'Search people by name…'
+                                  : 'Find your perfect stay…',
+                          hintStyle: GoogleFonts.outfit(
+                            color: Theme.of(context).brightness == Brightness.dark
+                                ? Colors.white30
+                                : Colors.black38,
+                            fontSize: 14,
+                          ),
+                          prefixIcon: Icon(
+                            Icons.search_rounded,
+                            color: Theme.of(context).brightness == Brightness.dark
+                                ? Colors.white30
+                                : Colors.black38,
+                          ),
+                          suffixIcon: _query.isNotEmpty
+                              ? IconButton(
+                                  icon: Icon(
+                                    Icons.close_rounded,
+                                    color: Theme.of(context).brightness == Brightness.dark
+                                        ? Colors.white38
+                                        : Colors.black38,
+                                  ),
+                                  onPressed: () {
+                                    _searchController.clear();
+                                    _onSearchChanged('');
+                                  })
+                              : null,
+                          border: InputBorder.none,
+                          contentPadding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                      ),
+                    ),
+                    if (!widget.showOnlyTrips) ...[
+                      const SizedBox(height: 12),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white.withValues(alpha: 0.05)
+                              : Colors.black.withValues(alpha: 0.04),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: TabBar(
+                          controller: _tabController,
+                          labelColor: Colors.white,
+                          unselectedLabelColor: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white38
+                              : Colors.black38,
+                          indicator: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFFFF8C00), Color(0xFF7C3AED)],
+                            ),
+                            borderRadius: BorderRadius.circular(14),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFFFF8C00).withValues(alpha: 0.4),
+                                blurRadius: 12,
+                              )
+                            ],
+                          ),
+                          indicatorSize: TabBarIndicatorSize.tab,
+                          dividerColor: Colors.transparent,
+                          labelStyle: GoogleFonts.outfit(fontWeight: FontWeight.w700, fontSize: 13),
+                          unselectedLabelStyle: GoogleFonts.outfit(fontWeight: FontWeight.w400, fontSize: 13),
+                          onTap: (_) {
+                            setState(() {});
+                            if (_tabController.index == 1 && _query.isEmpty) {
+                              _searchPeople('');
+                            }
+                          },
+                          tabs: const [
+                            Tab(text: '✈️  Trips'),
+                            Tab(text: '👥  People'),
+                            Tab(text: '🏨  Stays'),
                           ],
                         ),
                       ),
                     ],
-                  ),
-                  const SizedBox(height: 14),
-                  // Search bar
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.05),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4))
-                      ],
-                    ),
-                    child: TextField(
-                      controller: _searchController,
-                      onChanged: _onSearchChanged,
-                      decoration: InputDecoration(
-                        hintText: (widget.showOnlyTrips || _tabController.index == 0)
-                            ? 'Search trips, destinations in India…'
-                            : _tabController.index == 1
-                                ? 'Search people by name…'
-                                : 'Find your perfect stay…',
-                        hintStyle:
-                            GoogleFonts.poppins(color: Colors.grey[400]),
-                        prefixIcon:
-                            Icon(Icons.search, color: Colors.grey[400]),
-                        suffixIcon: _query.isNotEmpty
-                            ? IconButton(
-                                icon: const Icon(Icons.close,
-                                    color: Colors.grey),
-                                onPressed: () {
-                                  _searchController.clear();
-                                  _onSearchChanged('');
-                                })
-                            : null,
-                        border: InputBorder.none,
-                        contentPadding:
-                            const EdgeInsets.symmetric(vertical: 14),
-                      ),
-                    ),
-                  ),
-                  if (!widget.showOnlyTrips) ...[
-                    const SizedBox(height: 14),
-                    // Tabs
-                    TabBar(
-                      controller: _tabController,
-                      labelColor: Colors.amber[700],
-                      unselectedLabelColor: Colors.grey[500],
-                      indicatorColor: Colors.amber,
-                      indicatorWeight: 3,
-                      labelStyle: GoogleFonts.poppins(
-                          fontWeight: FontWeight.w600, fontSize: 14),
-                      unselectedLabelStyle:
-                          GoogleFonts.poppins(fontSize: 14),
-                      onTap: (_) {
-                        // Refresh hint text
-                        setState(() {});
-                        if (_tabController.index == 1 && _query.isEmpty) {
-                          _searchPeople('');
-                        }
-                      },
-                      tabs: const [
-                        Tab(text: '✈️  Trips'),
-                        Tab(text: '👥  People'),
-                        Tab(text: '🏨  Stays'),
-                      ],
-                    ),
                   ],
-                ],
-              ).animate().fadeIn(duration: 400.ms).slideY(begin: -0.1),
+                ).animate().fadeIn(duration: 400.ms).slideY(begin: -0.1),
+              ),
             ),
 
             // ── Tab content ──
@@ -223,7 +302,10 @@ class _ExploreScreenState extends State<ExploreScreen>
                     children: [
                       _buildTripsTab(),
                       _buildPeopleTab(),
-                      const AccommodationsScreen(),
+                      AccommodationsScreen(
+                        isEmbedded: true,
+                        initialQuery: _tabController.index == 2 ? _query : '',
+                      ),
                     ],
                   ),
             ),

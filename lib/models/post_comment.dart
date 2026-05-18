@@ -25,7 +25,9 @@ class PostComment {
       postId: data['postId'] ?? '',
       authorId: data['authorId'] ?? '',
       authorName: data['authorName'] ?? 'Traveler',
-      authorPhotoUrl: data['authorPhotoUrl'] ?? '',
+      authorPhotoUrl: (data['authorPhotoUrl']?.toString().contains('pravatar') ?? false)
+          ? 'https://api.dicebear.com/9.x/avataaars/png?seed=${data['authorId']}'
+          : data['authorPhotoUrl'] ?? '',
       text: data['text'] ?? '',
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
     );

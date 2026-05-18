@@ -1,83 +1,240 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import '../data/mock_data.dart';
 
 class PlacesApiService {
-  // Hardcoding API key for quick integration based on AndroidManifest.xml
-  static const String _apiKey = 'AIzaSyAunmmtJVnI36BqnW8piPQFMPH_7h-Mzhw';
-  static const String _baseUrl = 'https://maps.googleapis.com/maps/api/place';
+  static const String _nominatimUrl =
+      'https://nominatim.openstreetmap.org/search';
+  static const String _overpassUrl = 'https://overpass-api.de/api/interpreter';
+  static const Map<String, String> _headers = {
+    'User-Agent': 'GoTrivo/1.0',
+    'Accept': 'application/json',
+  };
 
-  // Helper to build photo URL
-  String _getPhotoUrl(String? photoReference) {
-    if (photoReference == null) {
-      return 'https://images.unsplash.com/photo-1544644181-1484b3fdfc62?w=500&q=80'; // Fallback
-    }
-    return '$_baseUrl/photo?maxwidth=800&photo_reference=$photoReference&key=$_apiKey';
-  }
 
-  // Fetch hotels/stays
-  Future<List<Map<String, dynamic>>> fetchAccommodations([String location = 'India']) async {
-    final url = Uri.parse('$_baseUrl/textsearch/json?query=hotels+in+$location&key=$_apiKey');
+  static Future<Map<String, String>> _fetchWikipediaImagesBulk(List<String> placeNames) async {
+    if (placeNames.isEmpty) return {};
     try {
-      final response = await http.get(url);
+      // Wikipedia allows max 50 titles per request
+      final titlesToFetch = placeNames.take(50).toList();
+      final titles = titlesToFetch.map((e) => Uri.encodeComponent(e)).join('|');
+      final url = Uri.parse(
+          'https://en.wikipedia.org/w/api.php?action=query&prop=pageimages&format=json&piprop=original&titles=$titles');
+      final response = await http.get(url, headers: _headers).timeout(const Duration(seconds: 3));
+      
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        final results = data['results'] as List;
+        final pages = data['query']['pages'] as Map<String, dynamic>?;
         
-        return results.map((place) {
-          final priceLevel = place['price_level'] ?? 2;
-          final rating = (place['rating'] ?? 4.0).toDouble();
-          final reviews = place['user_ratings_total'] ?? 100;
-          
-          int basePrice = 2000;
-          if (priceLevel == 1) basePrice = 1500;
-          if (priceLevel == 2) basePrice = 3500;
-          if (priceLevel == 3) basePrice = 8000;
-          if (priceLevel == 4) basePrice = 15000;
+        final Map<String, String> results = {};
+        if (pages != null) {
+          for (var page in pages.values) {
+            final title = page['title'] as String?;
+            if (title != null && page.containsKey('original')) {
+              results[title] = page['original']['source'] as String;
+            }
+          }
+        }
+        return results;
+      }
+    } catch (_) {}
+    return {};
+  }
+
+  Future<List<Map<String, dynamic>>> fetchAccommodations([
+    String location = 'India',
+    double? latitude,
+    double? longitude,
+  ]) async {
+    try {
+      dynamic lat = latitude;
+      dynamic lon = longitude;
+
+      if (lat == null || lon == null) {
+        // 1. Get coordinates for the location using Nominatim
+        final geoUrl = Uri.parse(
+          '$_nominatimUrl?q=${Uri.encodeComponent(location)}&format=json&limit=1',
+        );
+        final geoResponse = await http.get(geoUrl, headers: _headers);
+
+        if (geoResponse.statusCode != 200) return [];
+        final List geoData = json.decode(geoResponse.body);
+        if (geoData.isEmpty) return [];
+
+        lat = geoData[0]['lat'];
+        lon = geoData[0]['lon'];
+      }
+
+      // 2. Query Overpass API for hotels and hostels around the coordinates
+      final query =
+          '''
+        [out:json];
+        (
+          node(around:5000,$lat,$lon)["tourism"="hotel"];
+          node(around:5000,$lat,$lon)["tourism"="hostel"];
+        );
+        out 10;
+      ''';
+
+      final response = await http.post(
+        Uri.parse(_overpassUrl),
+        body: {'data': query},
+        headers: _headers,
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        final elements = data['elements'] as List;
+
+        final names = elements
+            .map((e) => e['tags']?['name'] as String?)
+            .where((n) => n != null && n.isNotEmpty)
+            .cast<String>()
+            .toList();
+            
+        final wikiImages = await _fetchWikipediaImagesBulk(names);
+
+        final accommodations = elements.map((place) {
+          final tags = place['tags'] ?? {};
+          final name = tags['name'] ?? 'Local Stay';
+          final type = tags['tourism'] == 'hostel' ? 'Hostel' : 'Hotel';
 
           return {
-            'id': place['place_id'],
-            'name': place['name'],
-            'image': _getPhotoUrl(place['photos']?[0]?['photo_reference']),
-            'location': place['formatted_address'] ?? 'Unknown Location',
-            'type': 'Hotel',
-            'price': '₹$basePrice',
-            'priceNum': basePrice,
-            'rating': rating,
-            'reviews': reviews,
-            'badge': priceLevel > 2 ? '👑 Premium' : '⭐ Standard',
-            'amenities': ['Wi-Fi', 'AC', 'Room Service'],
+            'id': place['id'].toString(),
+            'name': name,
+            'image': wikiImages[name] ?? '',
+            'location': location,
+            'type': type,
+            'price': type == 'Hostel'
+                ? 'â‚¹1200'
+                : 'â‚¹3500', // Mocked price based on type
+            'priceNum': type == 'Hostel' ? 1200 : 3500,
+            'rating': 4.5, // Mocked rating
+            'reviews': 120, // Mocked reviews count
+            'badge': type == 'Hostel' ? 'ðŸŽ’ Backpacker' : 'â­ Standard',
+            'amenities': ['Wi-Fi', 'AC', 'Breakfast'],
             'color': const Color(0xFF6A11CB),
           };
         }).toList();
+
+        if (accommodations.isNotEmpty) {
+          return accommodations;
+        }
       }
     } catch (e) {
       debugPrint('Error fetching accommodations: $e');
     }
+
+    // Fallback to mock data if API fails or returns empty for generic queries like 'India'
+    return MockData.accommodations;
+  }
+
+  // Fetch tourist attractions using Overpass API
+  Future<List<Map<String, dynamic>>> fetchTouristAttractions(
+    double lat,
+    double lon,
+  ) async {
+    try {
+      final query =
+          '''
+        [out:json];
+        (
+          node(around:20000,$lat,$lon)["tourism"="attraction"];
+          node(around:20000,$lat,$lon)["tourism"="museum"];
+          node(around:20000,$lat,$lon)["tourism"="viewpoint"];
+          node(around:20000,$lat,$lon)["historic"="monument"];
+        );
+        out 30;
+      ''';
+
+      final response = await http.post(
+        Uri.parse(_overpassUrl),
+        body: {'data': query},
+        headers: _headers,
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        final elements = data['elements'] as List;
+
+        final validElements = elements.where(
+          (place) => place['tags'] != null && place['tags']['name'] != null,
+        ).toList();
+
+        final names = validElements
+            .map((e) => e['tags']['name'] as String)
+            .where((n) => n.isNotEmpty)
+            .toList();
+
+        final wikiImages = await _fetchWikipediaImagesBulk(names);
+
+        final attractions = validElements.map((place) {
+              final tags = place['tags'];
+              final name = tags['name'];
+
+              return {
+                'id': place['id'].toString(),
+                'name': name,
+                'image': wikiImages[name] ?? '',
+                'lat': place['lat'],
+                'lng': place['lon'],
+                'address':
+                    tags['addr:full'] ??
+                    tags['addr:city'] ??
+                    tags['is_in:city'] ??
+                    'Local Attraction',
+                'rating': 4.5,
+                'reviews':
+                    150 + (place['id'] % 100)
+                        as int, // Mocked realistic looking reviews
+              };
+            })
+            .toList();
+
+        if (attractions.isNotEmpty) {
+          return attractions;
+        }
+      }
+    } catch (e) {
+      debugPrint('Error fetching attractions: $e');
+    }
     return [];
   }
 
-  // Fetch general locations for the home screen / itinerary
+  // Fetch general locations for the home screen / itinerary using Nominatim
   Future<List<Map<String, dynamic>>> fetchLocations(String query) async {
-    final url = Uri.parse('$_baseUrl/textsearch/json?query=$query&key=$_apiKey');
+    final url = Uri.parse(
+      '$_nominatimUrl?q=${Uri.encodeComponent(query)}&format=json&limit=5',
+    );
     try {
-      final response = await http.get(url);
+      final response = await http.get(url, headers: _headers);
       if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        final results = data['results'] as List;
+        final List data = json.decode(response.body);
 
-        return results.map((place) {
-          final types = (place['types'] as List?)?.take(2).join(', ') ?? '';
+        final names = data
+            .map((place) => place['name'] ?? place['display_name']?.split(',')[0] ?? '')
+            .where((n) => n.isNotEmpty)
+            .cast<String>()
+            .toList();
+
+        final wikiImages = await _fetchWikipediaImagesBulk(names);
+
+        return data.map((place) {
+          final lat = double.tryParse(place['lat']?.toString() ?? '0.0');
+          final lon = double.tryParse(place['lon']?.toString() ?? '0.0');
+          final name = place['name'] ?? place['display_name']?.split(',')[0] ?? 'Unknown';
+
           return {
-            'id': place['place_id'],
-            'name': place['name'],
-            'address': place['formatted_address'] ?? place['vicinity'] ?? '',
-            'rating': (place['rating'] ?? 0.0).toDouble(),
-            'reviews': place['user_ratings_total'] ?? 0,
-            'types': types,
-            'image': _getPhotoUrl(place['photos']?[0]?['photo_reference']),
-            'lat': place['geometry']?['location']?['lat'],
-            'lng': place['geometry']?['location']?['lng'],
+            'id': place['place_id'].toString(),
+            'name': name,
+            'address': place['display_name'] ?? '',
+            'rating': 4.5, // Mocked for UI
+            'reviews': 80, // Mocked
+            'types': place['type'] ?? place['class'] ?? 'place',
+            'image': wikiImages[name] ?? '',
+            'lat': lat,
+            'lng': lon,
           };
         }).toList();
       }
@@ -87,17 +244,58 @@ class PlacesApiService {
     return [];
   }
 
-  // Autocomplete for search bars
-  Future<List<String>> fetchAutocomplete(String input) async {
-    if (input.isEmpty) return [];
-    
-    final url = Uri.parse('$_baseUrl/autocomplete/json?input=$input&components=country:in&key=$_apiKey');
+  // Fetch ATMs and Petrol Pumps near a coordinate using Overpass API
+  Future<List<Map<String, dynamic>>> fetchAmenities(double lat, double lng) async {
     try {
-      final response = await http.get(url);
+      final query = '''
+        [out:json][timeout:10];
+        (
+          node(around:20000,$lat,$lng)["amenity"="atm"];
+          node(around:20000,$lat,$lng)["amenity"="fuel"];
+        );
+        out 40;
+      ''';
+
+      final response = await http.post(
+        Uri.parse(_overpassUrl),
+        body: {'data': query},
+        headers: _headers,
+      ).timeout(const Duration(seconds: 12));
+
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        final predictions = data['predictions'] as List;
-        return predictions.map<String>((p) => p['description']).toList();
+        final elements = data['elements'] as List;
+
+        return elements.map((e) {
+          final tags = e['tags'] ?? {};
+          final amenity = tags['amenity'] as String? ?? 'atm';
+          return {
+            'lat': (e['lat'] as num).toDouble(),
+            'lng': (e['lon'] as num).toDouble(),
+            'name': tags['name'] ?? (amenity == 'fuel' ? 'Petrol Pump' : 'ATM'),
+            'type': amenity, // 'atm' or 'fuel'
+            'brand': tags['brand'] ?? tags['operator'] ?? '',
+          };
+        }).toList();
+      }
+    } catch (e) {
+      debugPrint('Error fetching amenities: $e');
+    }
+    return [];
+  }
+
+  // Autocomplete for search bars using Nominatim
+  Future<List<String>> fetchAutocomplete(String input) async {
+    if (input.isEmpty) return [];
+
+    final url = Uri.parse(
+      '$_nominatimUrl?q=${Uri.encodeComponent(input)}&format=json&limit=5&countrycodes=in',
+    );
+    try {
+      final response = await http.get(url, headers: _headers);
+      if (response.statusCode == 200) {
+        final List data = json.decode(response.body);
+        return data.map<String>((p) => p['display_name']).toList();
       }
     } catch (e) {
       debugPrint('Autocomplete error: $e');

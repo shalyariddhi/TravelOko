@@ -5,10 +5,12 @@ import '../services/firebase_service.dart';
 import '../models/trip.dart';
 import '../models/app_user.dart';
 import '../widgets/trip_card.dart';
+import '../widgets/shimmer_trip_card.dart';
 import '../widgets/host_trip_bottom_sheet.dart';
 import 'trip_detail_screen.dart';
 import 'generated_plan_screen.dart';
 import 'location_map_screen.dart';
+import 'collaborative_trip_screen.dart';
 
 class MyTripsScreen extends StatefulWidget {
   const MyTripsScreen({super.key});
@@ -37,29 +39,86 @@ class _MyTripsScreenState extends State<MyTripsScreen>
   @override
   Widget build(BuildContext context) {
     final user = _firebaseService.currentUser;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF6F7F9),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         elevation: 0,
-        title: Text('My Trips',
-            style: GoogleFonts.poppins(
-                fontWeight: FontWeight.bold, color: Colors.black87)),
-        centerTitle: true,
-        bottom: TabBar(
-          controller: _tabController,
-          labelColor: Colors.amber[700],
-          unselectedLabelColor: Colors.grey,
-          indicatorColor: Colors.amber,
-          labelStyle: GoogleFonts.poppins(fontWeight: FontWeight.w600),
-          tabs: const [
-            Tab(text: 'Joined'),
-            Tab(text: 'Created'),
-            Tab(text: 'Planned'),
-            Tab(text: 'Booked'),
-            Tab(text: 'Wishlist'),
-          ],
+        title: ShaderMask(
+          shaderCallback: (bounds) => const LinearGradient(
+            colors: [Color(0xFFFFD700), Color(0xFFFF8C00)],
+          ).createShader(bounds),
+          child: Text('My Trips',
+              style: GoogleFonts.outfit(
+                  fontWeight: FontWeight.w900,
+                  fontSize: 24,
+                  color: Colors.white)),
+        ),
+        centerTitle: false,
+        actions: [
+          Container(
+            margin: const EdgeInsets.only(right: 12),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFFFF8C00), Color(0xFF7C3AED)],
+              ),
+              borderRadius: BorderRadius.circular(14),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFFFF8C00).withValues(alpha: 0.4),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: IconButton(
+              icon: const Icon(Icons.group_add_rounded, color: Colors.white, size: 20),
+              tooltip: 'Create Collaborative Trip',
+              onPressed: () => _showCreateCollaborativeTripDialog(context),
+            ),
+          ),
+        ],
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(50),
+          child: Container(
+            margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+            decoration: BoxDecoration(
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.06)
+                  : Colors.black.withValues(alpha: 0.04),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: TabBar(
+              controller: _tabController,
+              labelColor: Colors.white,
+              unselectedLabelColor: isDark ? Colors.white38 : Colors.black38,
+              indicator: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFFFF8C00), Color(0xFFFF4500)],
+                ),
+                borderRadius: BorderRadius.circular(14),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFFFF8C00).withValues(alpha: 0.4),
+                    blurRadius: 10,
+                  ),
+                ],
+              ),
+              indicatorSize: TabBarIndicatorSize.tab,
+              dividerColor: Colors.transparent,
+              labelStyle: GoogleFonts.outfit(fontWeight: FontWeight.w700, fontSize: 12),
+              unselectedLabelStyle: GoogleFonts.outfit(fontWeight: FontWeight.w400, fontSize: 12),
+              tabs: const [
+                Tab(text: 'Joined'),
+                Tab(text: 'Created'),
+                Tab(text: 'Planned'),
+                Tab(text: 'Booked'),
+                Tab(text: 'Wishlist'),
+              ],
+            ),
+          ),
         ),
       ),
       body: user == null
@@ -77,12 +136,64 @@ class _MyTripsScreenState extends State<MyTripsScreen>
     );
   }
 
+  void _showCreateCollaborativeTripDialog(BuildContext context) {
+    final titleController = TextEditingController();
+    bool isCreating = false;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: Text('New Shared Trip', style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: titleController,
+                decoration: const InputDecoration(
+                  labelText: 'Trip Name',
+                  hintText: 'e.g. Goa Trip 2026',
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+            ElevatedButton(
+              onPressed: isCreating ? null : () async {
+                final title = titleController.text.trim();
+                if (title.isEmpty) return;
+                setState(() => isCreating = true);
+                
+                final tripId = await _firebaseService.createCollaborativeTrip(
+                  title, 
+                  DateTime.now(), 
+                  DateTime.now().add(const Duration(days: 3))
+                );
+                
+                setState(() => isCreating = false);
+                if (tripId != null && context.mounted) {
+                  Navigator.pop(context);
+                  Navigator.push(context, MaterialPageRoute(
+                    builder: (_) => CollaborativeTripScreen(tripId: tripId, tripTitle: title),
+                  ));
+                }
+              },
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.amber, foregroundColor: Colors.black),
+              child: isCreating ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : const Text('Create'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildJoinedTrips(String uid) {
     return StreamBuilder<List<String>>(
       stream: _firebaseService.getMyJoinedTripIds(uid),
       builder: (context, joinedSnapshot) {
         if (joinedSnapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
+          return const ShimmerTripList();
         }
 
         final joinedIds = joinedSnapshot.data ?? [];
@@ -98,7 +209,7 @@ class _MyTripsScreenState extends State<MyTripsScreen>
           stream: _firebaseService.getTrips(),
           builder: (context, tripsSnapshot) {
             if (tripsSnapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
+              return const ShimmerTripList();
             }
 
             final allTrips = tripsSnapshot.data ?? [];
@@ -119,12 +230,25 @@ class _MyTripsScreenState extends State<MyTripsScreen>
                 return TripCard(
                   trip: joinedTrips[index],
                   isJoined: true,
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (_) =>
-                            TripDetailScreen(trip: joinedTrips[index])),
-                  ),
+                  onTap: () {
+                    if (joinedTrips[index].isCollaborative) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) => CollaborativeTripScreen(
+                                  tripId: joinedTrips[index].id,
+                                  tripTitle: joinedTrips[index].title,
+                                )),
+                      );
+                    } else {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) =>
+                                TripDetailScreen(trip: joinedTrips[index])),
+                      );
+                    }
+                  },
                 );
               },
             );
@@ -178,12 +302,25 @@ class _MyTripsScreenState extends State<MyTripsScreen>
             return TripCard(
               trip: createdTrips[index],
               isJoined: true, // You own this trip
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (_) =>
-                        TripDetailScreen(trip: createdTrips[index])),
-              ),
+              onTap: () {
+                if (createdTrips[index].isCollaborative) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) => CollaborativeTripScreen(
+                              tripId: createdTrips[index].id,
+                              tripTitle: createdTrips[index].title,
+                            )),
+                  );
+                } else {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) =>
+                            TripDetailScreen(trip: createdTrips[index])),
+                  );
+                }
+              },
             );
           },
         );
@@ -195,7 +332,7 @@ class _MyTripsScreenState extends State<MyTripsScreen>
     return StreamBuilder<AppUser?>(
       stream: _firebaseService.getUserProfile(uid),
       builder: (context, userSnap) {
-        if (!userSnap.hasData) return const Center(child: CircularProgressIndicator());
+        if (!userSnap.hasData) return const ShimmerTripList(count: 2);
         
         final wishlistIds = userSnap.data?.wishlist ?? [];
         if (wishlistIds.isEmpty) {
@@ -209,7 +346,7 @@ class _MyTripsScreenState extends State<MyTripsScreen>
         return StreamBuilder<List<Trip>>(
           stream: _firebaseService.getTrips(),
           builder: (context, tripsSnap) {
-            if (!tripsSnap.hasData) return const Center(child: CircularProgressIndicator());
+            if (!tripsSnap.hasData) return const ShimmerTripList();
 
             final allTrips = tripsSnap.data ?? [];
             final wishlistedTrips = allTrips.where((t) => wishlistIds.contains(t.id)).toList();
@@ -241,7 +378,7 @@ class _MyTripsScreenState extends State<MyTripsScreen>
     return StreamBuilder<List<Map<String, dynamic>>>(
       stream: _firebaseService.getCustomTripRequests(uid),
       builder: (context, snapshot) {
-        if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+        if (!snapshot.hasData) return const ShimmerTripList(count: 2);
         
         final trips = snapshot.data ?? [];
         if (trips.isEmpty) {

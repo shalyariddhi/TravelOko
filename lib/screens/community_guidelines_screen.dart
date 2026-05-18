@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class CommunityGuidelinesScreen extends StatelessWidget {
@@ -27,7 +27,7 @@ class CommunityGuidelinesScreen extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             Text(
-              'Travel Loco is built on trust, respect, and mutual understanding. To ensure everyone has a safe and enjoyable experience, we strictly enforce the following rules.',
+              'Go-Trivo is built on trust, respect, and mutual understanding. To ensure everyone has a safe and enjoyable experience, we strictly enforce the following rules.',
               style: GoogleFonts.poppins(fontSize: 16, color: Colors.grey[700], height: 1.5),
             ),
             const SizedBox(height: 32),
@@ -106,3 +106,4 @@ class CommunityGuidelinesScreen extends StatelessWidget {
     );
   }
 }
+

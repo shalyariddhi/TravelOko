@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../models/trip.dart';
 
 class TripCard extends StatefulWidget {
@@ -63,11 +64,11 @@ class _TripCardState extends State<TripCard> {
       child: Container(
         margin: const EdgeInsets.only(bottom: 24),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.07),
+              color: Theme.of(context).shadowColor.withValues(alpha: 0.07),
               blurRadius: 20,
               offset: const Offset(0, 8),
             ),
@@ -82,15 +83,19 @@ class _TripCardState extends State<TripCard> {
                 ClipRRect(
                   borderRadius:
                       const BorderRadius.vertical(top: Radius.circular(24)),
-                  child: Image.network(
-                    trip.imageUrl,
+                  child: CachedNetworkImage(
+                    imageUrl: trip.imageUrl,
                     height: 220,
                     width: double.infinity,
                     fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => Container(
+                    placeholder: (context, url) => Container(
                       height: 220,
-                      color: Colors.grey[200],
-                      child: const Icon(Icons.image, size: 60, color: Colors.grey),
+                      color: Theme.of(context).dividerColor,
+                    ),
+                    errorWidget: (context, url, error) => Container(
+                      height: 220,
+                      color: Theme.of(context).dividerColor,
+                      child: Icon(Icons.image, size: 60, color: Theme.of(context).textTheme.bodyMedium?.color),
                     ),
                   ),
                 ),
@@ -132,7 +137,7 @@ class _TripCardState extends State<TripCard> {
                               color: Colors.white, size: 14),
                           const SizedBox(width: 4),
                           Text('Girliees',
-                              style: GoogleFonts.poppins(
+                              style: GoogleFonts.outfit(
                                   color: Colors.white,
                                   fontSize: 11,
                                   fontWeight: FontWeight.w600)),
@@ -150,15 +155,15 @@ class _TripCardState extends State<TripCard> {
                       child: Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: Theme.of(context).colorScheme.surface,
                           shape: BoxShape.circle,
                           boxShadow: [
-                            BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 4),
+                            BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 6),
                           ],
                         ),
                         child: Icon(
                           widget.isWishlisted ? Icons.favorite : Icons.favorite_border,
-                          color: widget.isWishlisted ? Colors.red : Colors.grey[400],
+                          color: widget.isWishlisted ? Colors.red : Theme.of(context).disabledColor,
                           size: 18,
                         ).animate(target: widget.isWishlisted ? 1 : 0).scaleXY(end: 1.2, duration: 200.ms).then().scaleXY(end: 1 / 1.2),
                       ),
@@ -181,7 +186,7 @@ class _TripCardState extends State<TripCard> {
                             color: Colors.white, size: 13),
                         const SizedBox(width: 4),
                         Text('${trip.durationDays}D',
-                            style: GoogleFonts.poppins(
+                            style: GoogleFonts.outfit(
                                 color: Colors.white,
                                 fontSize: 12,
                                 fontWeight: FontWeight.w600)),
@@ -198,7 +203,7 @@ class _TripCardState extends State<TripCard> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(trip.title,
-                          style: GoogleFonts.poppins(
+                          style: GoogleFonts.outfit(
                               color: Colors.white,
                               fontSize: 17,
                               fontWeight: FontWeight.bold),
@@ -212,7 +217,7 @@ class _TripCardState extends State<TripCard> {
                           const SizedBox(width: 3),
                           Flexible(
                             child: Text(trip.destination,
-                                style: GoogleFonts.poppins(
+                                style: GoogleFonts.outfit(
                                     color: Colors.white70, fontSize: 12),
                                 overflow: TextOverflow.ellipsis),
                           ),
@@ -233,26 +238,25 @@ class _TripCardState extends State<TripCard> {
                   // Organizer row
                   Row(
                     children: [
-                      CircleAvatar(
+                        CircleAvatar(
                         radius: 16,
-                        backgroundColor: Colors.grey[200],
+                        backgroundColor: Theme.of(context).dividerColor,
                         backgroundImage:
-                            NetworkImage(trip.organizerAvatar),
-                        onBackgroundImageError: (_, __) {},
-                        child: const Icon(Icons.person, size: 16, color: Colors.grey),
+                            CachedNetworkImageProvider(trip.organizerAvatar),
+                        child: Icon(Icons.person, size: 16, color: Theme.of(context).textTheme.bodyMedium?.color),
                       ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(trip.organizerName,
-                            style: GoogleFonts.poppins(
-                                fontWeight: FontWeight.w600, fontSize: 13)),
+                            style: GoogleFonts.outfit(
+                                fontWeight: FontWeight.w600, fontSize: 13, color: Theme.of(context).textTheme.bodyLarge?.color)),
                       ),
-                      const Icon(Icons.calendar_today,
-                          size: 13, color: Colors.grey),
+                      Icon(Icons.calendar_today,
+                          size: 13, color: Theme.of(context).textTheme.bodyMedium?.color),
                       const SizedBox(width: 4),
                       Text(dateStr,
-                          style: GoogleFonts.poppins(
-                              fontSize: 12, color: Colors.grey[600])),
+                          style: GoogleFonts.outfit(
+                              fontSize: 12, color: Theme.of(context).textTheme.bodyMedium?.color)),
                     ],
                   ),
                   const SizedBox(height: 14),
@@ -267,9 +271,10 @@ class _TripCardState extends State<TripCard> {
                           children: [
                             Text(
                                 '₹${NumberFormat('#,##,###').format(trip.budget)}  •  ${_budgetLabel(trip.budget)}',
-                                style: GoogleFonts.poppins(
+                                style: GoogleFonts.outfit(
                                     fontSize: 13,
-                                    fontWeight: FontWeight.w600)),
+                                    fontWeight: FontWeight.w600,
+                                    color: Theme.of(context).textTheme.bodyLarge?.color)),
                             const SizedBox(height: 5),
                             Row(
                               children: List.generate(4, (i) {
@@ -281,7 +286,7 @@ class _TripCardState extends State<TripCard> {
                                   decoration: BoxDecoration(
                                     color: filled
                                         ? _budgetColor(trip.budget)
-                                        : Colors.grey[200],
+                                        : Theme.of(context).dividerColor,
                                     borderRadius: BorderRadius.circular(3),
                                   ),
                                 );
@@ -296,21 +301,21 @@ class _TripCardState extends State<TripCard> {
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
                           Text('${trip.seatsLeft} seats left',
-                              style: GoogleFonts.poppins(
+                              style: GoogleFonts.outfit(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,
                                   color: trip.seatsLeft <= 2
-                                      ? Colors.red
-                                      : Colors.grey[700])),
+                                      ? Colors.redAccent
+                                      : Theme.of(context).textTheme.bodyMedium?.color)),
                           const SizedBox(height: 5),
                           SizedBox(
                             width: 80,
                             child: LinearProgressIndicator(
                               value: seatsPercent,
-                              backgroundColor: Colors.grey[200],
+                              backgroundColor: Theme.of(context).dividerColor,
                               color: trip.seatsLeft <= 2
-                                  ? Colors.red
-                                  : Colors.amber,
+                                  ? Colors.redAccent
+                                  : Theme.of(context).primaryColor,
                               borderRadius: BorderRadius.circular(3),
                             ),
                           ),
@@ -329,16 +334,16 @@ class _TripCardState extends State<TripCard> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
-                          color: Colors.amber.withValues(alpha: 0.12),
+                          color: Theme.of(context).primaryColor.withValues(alpha: 0.10),
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
-                              color: Colors.amber.withValues(alpha: 0.4)),
+                              color: Theme.of(context).primaryColor.withValues(alpha: 0.3)),
                         ),
                         child: Text(tag,
-                            style: GoogleFonts.poppins(
+                            style: GoogleFonts.outfit(
                                 fontSize: 11,
-                                color: Colors.amber[800],
-                                fontWeight: FontWeight.w500)),
+                                color: Theme.of(context).primaryColor,
+                                fontWeight: FontWeight.w600)),
                       );
                     }).toList(),
                   ),
@@ -383,17 +388,17 @@ class _TripCardState extends State<TripCard> {
                             },
                       style: ElevatedButton.styleFrom(
                         backgroundColor:
-                            (_hasJoined || widget.isJoined) ? Colors.grey[300] : Colors.amber,
+                            (_hasJoined || widget.isJoined) ? Theme.of(context).dividerColor : Theme.of(context).primaryColor,
                         foregroundColor:
-                            (_hasJoined || widget.isJoined) ? Colors.grey[600] : Colors.black87,
+                            (_hasJoined || widget.isJoined) ? Theme.of(context).textTheme.bodyMedium?.color : Theme.of(context).colorScheme.onPrimary,
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16)),
                         elevation: 0,
                       ),
                       child: Text(
-                        (_hasJoined || widget.isJoined) ? 'Joined' : 'Join Trip',
-                        style: GoogleFonts.poppins(
+                        (_hasJoined || widget.isJoined) ? 'Joined ✓' : 'Join Trip',
+                        style: GoogleFonts.outfit(
                             fontWeight: FontWeight.bold, fontSize: 15),
                       ),
                     ).animate(
@@ -401,8 +406,8 @@ class _TripCardState extends State<TripCard> {
                           (_hasJoined || widget.isJoined) ? null : controller.repeat(reverse: true),
                     ).scaleXY(
                       begin: 1.0,
-                      end: 1.03,
-                      duration: 900.ms,
+                      end: 1.02,
+                      duration: 1200.ms,
                       curve: Curves.easeInOut,
                     ),
                   ),
@@ -415,3 +420,4 @@ class _TripCardState extends State<TripCard> {
     );
   }
 }
+

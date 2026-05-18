@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -200,7 +200,7 @@ class _LoginScreenState extends State<LoginScreen> {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // ── 1. Animated background ──
+          // â”€â”€ 1. Animated background â”€â”€
           AnimatedSwitcher(
             duration: const Duration(seconds: 2),
             transitionBuilder: (child, anim) =>
@@ -216,7 +216,7 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ),
 
-          // ── 2. Dark gradient ──
+          // â”€â”€ 2. Dark gradient â”€â”€
           Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
@@ -232,7 +232,7 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ),
 
-          // ── 3. Content ──
+          // â”€â”€ 3. Content â”€â”€
           SafeArea(
             child: SingleChildScrollView(
               physics: const ClampingScrollPhysics(),
@@ -293,7 +293,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                         // Brand name
                         Text(
-                          'TravelOco',
+                          'Go-Trivo',
                           style: GoogleFonts.poppins(
                             fontSize: 40,
                             fontWeight: FontWeight.w800,
@@ -310,7 +310,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                         const SizedBox(height: 28),
 
-                        // ── Login / Signup toggle tabs ──
+                        // â”€â”€ Login / Signup toggle tabs â”€â”€
                         Container(
                           decoration: BoxDecoration(
                             color: Colors.white.withValues(alpha: 0.1),
@@ -330,7 +330,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                         const SizedBox(height: 20),
 
-                        // ── Email field ──
+                        // â”€â”€ Email field â”€â”€
                         _buildInputField(
                           controller: _emailController,
                           hint: 'Email address',
@@ -339,7 +339,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                         const SizedBox(height: 14),
 
-                        // ── Password field ──
+                        // â”€â”€ Password field â”€â”€
                         _buildInputField(
                           controller: _passwordController,
                           hint: 'Password',
@@ -352,7 +352,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                         const SizedBox(height: 22),
 
-                        // ── Submit button ──
+                        // â”€â”€ Submit button â”€â”€
                         SizedBox(
                           width: double.infinity,
                           height: 54,
@@ -386,7 +386,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                         const SizedBox(height: 20),
 
-                        // ── OR divider ──
+                        // â”€â”€ OR divider â”€â”€
                         Row(
                           children: [
                             const Expanded(
@@ -407,7 +407,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                         const SizedBox(height: 16),
 
-                        // ── Google button ──
+                        // â”€â”€ Google button â”€â”€
                         GestureDetector(
                           onTap: _isGoogleLoading ? null : _signInWithGoogle,
                           child: AnimatedContainer(
@@ -474,7 +474,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                         const SizedBox(height: 14),
 
-                        // ── Dev Seed button ──
+                        // â”€â”€ Dev Seed button â”€â”€
                         Center(
                           child: GestureDetector(
                             onTap: _isSeeding
@@ -486,7 +486,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                     setState(() => _isSeeding = false);
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(
-                                        content: Text('✅ Database seeded!',
+                                        content: Text('âœ… Database seeded!',
                                             style: GoogleFonts.poppins()),
                                         backgroundColor: Colors.green[700],
                                         behavior: SnackBarBehavior.floating,
@@ -514,7 +514,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 Text(
                                   _isSeeding
                                       ? 'Seeding...'
-                                      : '🛠 Seed Database (Dev)',
+                                      : 'ðŸ›  Seed Database (Dev)',
                                   style: GoogleFonts.poppins(
                                       color: Colors.white30, fontSize: 11),
                                 ),
@@ -644,3 +644,4 @@ class _GoogleLogoPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant CustomPainter old) => false;
 }
+

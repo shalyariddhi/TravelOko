@@ -6,6 +6,8 @@ class Trip {
   final String id;
   final String title;
   final String destination;
+  final double? lat;
+  final double? lng;
   final String imageUrl;
   final String organizerId;
   final String organizerName;
@@ -17,6 +19,7 @@ class Trip {
   final int seatsLeft;
   final bool isOnlyGirls;
   final bool isExclusive;
+  final bool isCollaborative;
   final List<String> tags;
   final String description;
   final List<ItineraryOption> itineraries;
@@ -27,6 +30,8 @@ class Trip {
     required this.id,
     required this.title,
     required this.destination,
+    this.lat,
+    this.lng,
     required this.imageUrl,
     required this.organizerId,
     required this.organizerName,
@@ -38,6 +43,7 @@ class Trip {
     required this.seatsLeft,
     this.isOnlyGirls = false,
     this.isExclusive = false,
+    this.isCollaborative = false,
     this.tags = const [],
     this.description = '',
     this.itineraries = const [],
@@ -50,19 +56,24 @@ class Trip {
       id: id,
       title: data['title'] ?? '',
       destination: data['destination'] ?? '',
+      lat: data['lat'] is String ? double.tryParse(data['lat']) : (data['lat'] as num?)?.toDouble(),
+      lng: data['lng'] is String ? double.tryParse(data['lng']) : (data['lng'] as num?)?.toDouble(),
       imageUrl: data['imageUrl'] ?? '',
       organizerId: data['organizerId'] ?? '',
       organizerName: data['organizerName'] ?? '',
-      organizerAvatar: data['organizerAvatar'] ?? '',
+      organizerAvatar: (data['organizerAvatar']?.toString().contains('pravatar') ?? false)
+          ? 'https://api.dicebear.com/9.x/avataaars/png?seed=${data['organizerId']}'
+          : data['organizerAvatar'] ?? '',
       budget: (data['budget'] ?? 0).toInt(),
       durationDays: (data['durationDays'] ?? 1).toInt(),
       startDate: data['startDate'] != null
-          ? (data['startDate'] as dynamic).toDate()
+          ? (data['startDate'] is DateTime ? data['startDate'] : (data['startDate'] as dynamic).toDate())
           : DateTime.now(),
       totalSeats: (data['totalSeats'] ?? 10).toInt(),
       seatsLeft: (data['seatsLeft'] ?? 10).toInt(),
       isOnlyGirls: data['isOnlyGirls'] ?? false,
       isExclusive: data['isExclusive'] ?? false,
+      isCollaborative: data['isCollaborative'] ?? false,
       tags: List<String>.from(data['tags'] ?? []),
       description: data['description'] ?? '',
       itineraries: (data['itineraries'] as List<dynamic>?)
@@ -84,6 +95,8 @@ class Trip {
     return {
       'title': title,
       'destination': destination,
+      if (lat != null) 'lat': lat,
+      if (lng != null) 'lng': lng,
       'imageUrl': imageUrl,
       'organizerId': organizerId,
       'organizerName': organizerName,
@@ -95,6 +108,7 @@ class Trip {
       'seatsLeft': seatsLeft,
       'isOnlyGirls': isOnlyGirls,
       'isExclusive': isExclusive,
+      'isCollaborative': isCollaborative,
       'tags': tags,
       'description': description,
       'itineraries': itineraries.map((i) => i.toMap()).toList(),

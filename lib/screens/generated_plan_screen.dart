@@ -4,6 +4,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
 import '../services/firebase_service.dart';
 import '../services/places_api_service.dart';
+import 'export_itinerary_screen.dart';
 
 class GeneratedPlanScreen extends StatefulWidget {
   final Map<String, dynamic> requestData;
@@ -91,29 +92,29 @@ class _GeneratedPlanScreenState extends State<GeneratedPlanScreen> {
         final firstPlace = allPlaces.isNotEmpty ? allPlaces[0] : null;
         return {
           'title': 'Arrival & First Impressions',
-          'description': 'Welcome to $destination! $budgetLabel stay for $travelers traveler${travelers > 1 ? "s" : ""}. Get settled and soak it all in.',
+          'description': 'Welcome to $destination! $budgetLabel stay for $travelers traveler${travelers > 1 ? "s" : ""}. Get settled and soak it all in.\nTotal Budget: ₹$budget per person.',
           'timeline': [
             {'time': '12:00 PM', 'activity': '✈️ Arrive & transfer to accommodation'},
             {'time': '02:00 PM', 'activity': '🏨 Check-in & freshen up'},
             if (firstPlace != null)
-              {'time': '04:30 PM', 'activity': '📍 First stop: ${firstPlace['name']}'}
+              {'time': '04:30 PM', 'activity': '📍 First stop: ${firstPlace['name']} (Est. ₹${(budget * 0.05).round()})'}
             else
               {'time': '04:30 PM', 'activity': '🚶 Evening walk around the neighbourhood'},
-            {'time': '07:30 PM', 'activity': '🍽️ Welcome dinner — try the local specialty'},
+            {'time': '07:30 PM', 'activity': '🍽️ Welcome dinner — try the local specialty (Est. ₹${(budget * 0.1).round()})'},
           ]
         };
       } else if (index == days - 1) {
         final lastPlace = allPlaces.length > 1 ? allPlaces[allPlaces.length - 1] : null;
         return {
           'title': 'Last Day & Departure',
-          'description': 'Soak in $destination one last time before heading home. Safe travels! ✈️',
+          'description': 'Soak in $destination one last time before heading home. Safe travels! ✈️\nRemaining Budget: ~₹${(budget * 0.15).round()}',
           'timeline': [
             {'time': '08:00 AM', 'activity': '☕ Relaxed breakfast & pack up'},
             if (lastPlace != null)
-              {'time': '10:00 AM', 'activity': '🛍️ Final visit to ${lastPlace['name']}'}
+              {'time': '10:00 AM', 'activity': '🛍️ Final visit to ${lastPlace['name']} (Est. ₹${(budget * 0.05).round()})'}
             else
               {'time': '10:00 AM', 'activity': '🛍️ Last-minute shopping for souvenirs'},
-            {'time': '12:30 PM', 'activity': '🥘 Farewell lunch at a favourite spot'},
+            {'time': '12:30 PM', 'activity': '🥘 Farewell lunch at a favourite spot (Est. ₹${(budget * 0.08).round()})'},
             {'time': '03:00 PM', 'activity': '🚕 Transfer to airport / railway station'},
           ]
         };
@@ -137,36 +138,44 @@ class _GeneratedPlanScreenState extends State<GeneratedPlanScreen> {
         };
         final titleList = dayTitles[style]!;
         final dayTitle = 'Day ${index + 1} — ${titleList[(index - 1) % titleList.length]}';
+        final dailyBudget = (budget * 0.8 / (days > 2 ? days - 2 : 1)).round(); // Assume 20% on travel/accommodation
+
+        final dayPlaces = [p1, p2, p3].where((p) => p != null).map((p) => p!['name'] as String).toList();
 
         return {
           'title': dayTitle,
-          'description': p1 != null
-              ? 'Today\'s highlights: ${[p1, p2, p3].where((p) => p != null).map((p) => p!['name']).join(', ')}.'
-              : 'A full day of $style experiences in $destination.',
+          'description': 'A full day of $style experiences in $destination.',
+          'placesToVisit': dayPlaces,
+          'expenses': {
+            'Food & Dining': (dailyBudget * 0.5).round(),
+            'Activities & Entry': (dailyBudget * 0.3).round(),
+            'Local Transit': (dailyBudget * 0.2).round(),
+            'Total': dailyBudget,
+          },
           'timeline': [
             {
               'time': morningTime,
-              'activity': p1 != null ? '🌅 $morningVerb ${p1['name']}' : '🌅 Morning exploration of $destination',
+              'activity': p1 != null ? '🌅 $morningVerb ${p1['name']} (Est. ₹${(dailyBudget * 0.15).round()})' : '🌅 Morning exploration of $destination (Est. ₹${(dailyBudget * 0.1).round()})',
               if (p1 != null) 'address': p1['address'] ?? '',
               if (p1 != null) 'rating': p1['rating'],
               if (p1 != null) 'reviews': p1['reviews'],
             },
-            {'time': '11:00 AM', 'activity': lunch},
+            {'time': '11:00 AM', 'activity': '$lunch (Est. ₹${(dailyBudget * 0.2).round()})'},
             {
               'time': afternoonTime,
-              'activity': p2 != null ? '🗺️ $afternoonVerb ${p2['name']}' : '🗺️ Afternoon discovery in $destination',
+              'activity': p2 != null ? '🗺️ $afternoonVerb ${p2['name']} (Est. ₹${(dailyBudget * 0.25).round()})' : '🗺️ Afternoon discovery in $destination (Est. ₹${(dailyBudget * 0.2).round()})',
               if (p2 != null) 'address': p2['address'] ?? '',
               if (p2 != null) 'rating': p2['rating'],
               if (p2 != null) 'reviews': p2['reviews'],
             },
             if (p3 != null) {
               'time': '04:00 PM',
-              'activity': '📸 Quick stop: ${p3['name']}',
+              'activity': '📸 Quick stop: ${p3['name']} (Est. ₹${(dailyBudget * 0.1).round()})',
               'address': p3['address'] ?? '',
               'rating': p3['rating'],
               'reviews': p3['reviews'],
             },
-            {'time': eveningTime, 'activity': evening},
+            {'time': eveningTime, 'activity': '$evening (Est. ₹${(dailyBudget * 0.3).round()})'},
           ],
         };
       }
@@ -188,7 +197,7 @@ class _GeneratedPlanScreenState extends State<GeneratedPlanScreen> {
         {'name': 'Anjuna Hippie Hostel', 'type': 'Hostel', 'price': '₹900', 'rating': 4.3, 'icon': '🎸', 'color': const Color(0xFF6A11CB)},
       ],
       'manali': [
-        {'name': 'Cozy Himalayan Cabin', 'type': 'Rental', 'price': '₹3,200', 'rating': 4.8, 'icon': '🏔️', 'color': const Color(0xFF134E5E)},
+        {'name': 'Cozy Himalayan Cabin', 'type': 'Dormitory', 'price': '₹3,200', 'rating': 4.8, 'icon': '🏔️', 'color': const Color(0xFF134E5E)},
         {'name': 'Snow Peak Hostel', 'type': 'Hostel', 'price': '₹800', 'rating': 4.5, 'icon': '❄️', 'color': const Color(0xFF1e3c72)},
         {'name': 'The Manali Inn', 'type': 'Hotel', 'price': '₹3,500', 'rating': 4.3, 'icon': '🌲', 'color': const Color(0xFF2d6a4f)},
       ],
@@ -199,7 +208,7 @@ class _GeneratedPlanScreenState extends State<GeneratedPlanScreen> {
       ],
       'kasol': [
         {'name': 'The Backpacker Den', 'type': 'Hostel', 'price': '₹850', 'rating': 4.5, 'icon': '🔥', 'color': const Color(0xFF6A11CB)},
-        {'name': 'Parvati Valley Camp', 'type': 'Rental', 'price': '₹2,200', 'rating': 4.7, 'icon': '⛺', 'color': const Color(0xFF11998e)},
+        {'name': 'Parvati Valley Camp', 'type': 'Dormitory', 'price': '₹2,200', 'rating': 4.7, 'icon': '⛺', 'color': const Color(0xFF11998e)},
         {'name': 'Kheerganga Guest House', 'type': 'Hotel', 'price': '₹1,800', 'rating': 4.2, 'icon': '🌿', 'color': const Color(0xFF2d6a4f)},
       ],
       'jaipur': [
@@ -208,7 +217,7 @@ class _GeneratedPlanScreenState extends State<GeneratedPlanScreen> {
         {'name': 'Pink City Boutique Inn', 'type': 'Hotel', 'price': '₹3,800', 'rating': 4.5, 'icon': '🌸', 'color': const Color(0xFFED8F03)},
       ],
       'mumbai': [
-        {'name': 'Urban Loft Apartment', 'type': 'Rental', 'price': '₹5,800', 'rating': 4.7, 'icon': '💻', 'color': const Color(0xFF4286F4)},
+        {'name': 'Urban Loft Apartment', 'type': 'Dormitory', 'price': '₹5,800', 'rating': 4.7, 'icon': '💻', 'color': const Color(0xFF4286F4)},
         {'name': 'Backpackers Inn Colaba', 'type': 'Hostel', 'price': '₹950', 'rating': 4.3, 'icon': '🌆', 'color': const Color(0xFF6A11CB)},
         {'name': 'The Taj Mahal Hotel', 'type': 'Hotel', 'price': '₹18,000', 'rating': 4.9, 'icon': '⭐', 'color': const Color(0xFFED8F03)},
       ],
@@ -223,7 +232,7 @@ class _GeneratedPlanScreenState extends State<GeneratedPlanScreen> {
     return [
       {'name': 'Traveler\'s Hideout', 'type': 'Hostel', 'price': '₹850', 'rating': 4.3, 'icon': '🏕️', 'color': const Color(0xFF6A11CB)},
       {'name': 'The Grand Stay', 'type': 'Hotel', 'price': '₹4,500', 'rating': 4.6, 'icon': '🏨', 'color': const Color(0xFFED8F03)},
-      {'name': 'Cozy Retreat Rental', 'type': 'Rental', 'price': '₹3,000', 'rating': 4.5, 'icon': '🏡', 'color': const Color(0xFF134E5E)},
+      {'name': 'Cozy Retreat Dormitory', 'type': 'Dormitory', 'price': '₹3,000', 'rating': 4.5, 'icon': '🏡', 'color': const Color(0xFF134E5E)},
     ];
   }
 
@@ -396,6 +405,22 @@ class _GeneratedPlanScreenState extends State<GeneratedPlanScreen> {
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.black87),
         title: Text('Your Custom Plan', style: GoogleFonts.poppins(color: Colors.black87, fontWeight: FontWeight.bold)),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.ios_share, color: Colors.black87),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => ExportItineraryScreen(
+                    requestData: widget.requestData,
+                    itineraryDays: _itineraryDays,
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -481,6 +506,31 @@ class _GeneratedPlanScreenState extends State<GeneratedPlanScreen> {
                                 const SizedBox(height: 4),
                                 Text(day['description'] as String, style: GoogleFonts.poppins(fontSize: 13, color: Colors.grey[600])),
                                 const SizedBox(height: 12),
+                                if (day.containsKey('placesToVisit') && (day['placesToVisit'] as List).isNotEmpty) ...[
+                                  Text('Places to Visit', style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 12, color: Colors.amber[800])),
+                                  const SizedBox(height: 6),
+                                  Wrap(
+                                    spacing: 6,
+                                    runSpacing: 6,
+                                    children: (day['placesToVisit'] as List<String>).map((placeName) => Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                      decoration: BoxDecoration(
+                                        color: Colors.amber.withValues(alpha: 0.1),
+                                        borderRadius: BorderRadius.circular(6),
+                                        border: Border.all(color: Colors.amber.withValues(alpha: 0.2)),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(Icons.location_on, size: 12, color: Colors.amber[800]),
+                                          const SizedBox(width: 4),
+                                          Text(placeName, style: GoogleFonts.poppins(fontSize: 11, fontWeight: FontWeight.w500, color: Colors.black87)),
+                                        ],
+                                      ),
+                                    )).toList(),
+                                  ),
+                                  const SizedBox(height: 16),
+                                ],
                                 ...(day['timeline'] as List<dynamic>).map((item) {
                                   final timelineItem = item as Map<String, dynamic>;
                                   final hasPlace = timelineItem.containsKey('address') && (timelineItem['address'] as String).isNotEmpty;
@@ -531,12 +581,12 @@ class _GeneratedPlanScreenState extends State<GeneratedPlanScreen> {
                                                 ),
                                               ],
                                               // Rating
-                                              if (hasPlace && rating != null && (rating as double) > 0) ...[
+                                              if (hasPlace && rating != null && rating > 0) ...[
                                                 const SizedBox(height: 4),
                                                 Row(
                                                   children: [
                                                     ...List.generate(5, (i) => Icon(
-                                                      i < (rating as double).round() ? Icons.star_rounded : Icons.star_outline_rounded,
+                                                      i < rating.round() ? Icons.star_rounded : Icons.star_outline_rounded,
                                                       size: 12,
                                                       color: Colors.amber[600],
                                                     )),
@@ -555,6 +605,55 @@ class _GeneratedPlanScreenState extends State<GeneratedPlanScreen> {
                                     ),
                                   );
                                 }),
+                                if (day.containsKey('expenses')) ...[
+                                  const SizedBox(height: 16),
+                                  Container(
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey[50],
+                                      borderRadius: BorderRadius.circular(10),
+                                      border: Border.all(color: Colors.grey[200]!),
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text('Estimated Daily Expenses', style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 12, color: Colors.black87)),
+                                        const SizedBox(height: 8),
+                                        Row(
+                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Text('🍽️ Food & Dining', style: GoogleFonts.poppins(fontSize: 11, color: Colors.grey[600])),
+                                            Text('₹${(day['expenses'] as Map)['Food & Dining']}', style: GoogleFonts.poppins(fontSize: 11, fontWeight: FontWeight.w600)),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Row(
+                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Text('🎟️ Activities & Entry', style: GoogleFonts.poppins(fontSize: 11, color: Colors.grey[600])),
+                                            Text('₹${(day['expenses'] as Map)['Activities & Entry']}', style: GoogleFonts.poppins(fontSize: 11, fontWeight: FontWeight.w600)),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Row(
+                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Text('🚕 Local Transit', style: GoogleFonts.poppins(fontSize: 11, color: Colors.grey[600])),
+                                            Text('₹${(day['expenses'] as Map)['Local Transit']}', style: GoogleFonts.poppins(fontSize: 11, fontWeight: FontWeight.w600)),
+                                          ],
+                                        ),
+                                        const Divider(height: 16),
+                                        Row(
+                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Text('Total Daily Cost', style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.black87)),
+                                            Text('₹${(day['expenses'] as Map)['Total']}', style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.amber[800])),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
                               ],
                             ),
                           ),

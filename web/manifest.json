@@ -1,6 +1,6 @@
 {
-    "name": "travel_loco",
-    "short_name": "travel_loco",
+    "name": "Go-Trivo",
+    "short_name": "Go-Trivo",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../services/firebase_service.dart';
@@ -61,7 +61,7 @@ class _TermsScreenState extends State<TermsScreen> {
                   border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
                 ),
                 child: Text(
-                  'TravelOco is a platform to connect travelers. We are NOT responsible for what happens during your trips. Please exercise extreme caution, verify who you are traveling with, and do not trust anyone blindly. Safety is your own responsibility.',
+                  'Go-Trivo is a platform to connect travelers. We are NOT responsible for what happens during your trips. Please exercise extreme caution, verify who you are traveling with, and do not trust anyone blindly. Safety is your own responsibility.',
                   style: GoogleFonts.poppins(fontSize: 16, height: 1.5, color: Colors.black87),
                 ),
               ).animate().fadeIn(delay: 400.ms).slideX(),
@@ -91,3 +91,4 @@ class _TermsScreenState extends State<TermsScreen> {
     );
   }
 }
+

@@ -11,6 +11,9 @@ class SocialPost {
   final List<String> likedBy;
   final int commentsCount;
   final DateTime createdAt;
+  final List<double> embedding;
+  final List<String> hashtags;
+  final double trendingScore;
 
   SocialPost({
     required this.id,
@@ -23,6 +26,9 @@ class SocialPost {
     this.likedBy = const [],
     this.commentsCount = 0,
     required this.createdAt,
+    this.embedding = const [],
+    this.hashtags = const [],
+    this.trendingScore = 0.0,
   });
 
   factory SocialPost.fromMap(Map<String, dynamic> data, String id) {
@@ -30,13 +36,18 @@ class SocialPost {
       id: id,
       authorId: data['authorId'] ?? '',
       authorName: data['authorName'] ?? 'Traveler',
-      authorPhotoUrl: data['authorPhotoUrl'] ?? '',
+      authorPhotoUrl: (data['authorPhotoUrl']?.toString().contains('pravatar') ?? false)
+          ? 'https://api.dicebear.com/9.x/avataaars/png?seed=${data['authorId']}'
+          : data['authorPhotoUrl'] ?? '',
       content: data['content'] ?? '',
       imageUrl: data['imageUrl'] ?? '',
       likesCount: (data['likesCount'] ?? 0).toInt(),
       likedBy: List<String>.from(data['likedBy'] ?? []),
       commentsCount: (data['commentsCount'] ?? 0).toInt(),
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      embedding: (data['embedding'] as List<dynamic>?)?.map((e) => (e as num).toDouble()).toList() ?? [],
+      hashtags: List<String>.from(data['hashtags'] ?? []),
+      trendingScore: (data['trendingScore'] ?? 0.0).toDouble(),
     );
   }
 
@@ -51,6 +62,9 @@ class SocialPost {
       'likedBy': likedBy,
       'commentsCount': commentsCount,
       'createdAt': Timestamp.fromDate(createdAt),
+      'embedding': embedding,
+      'hashtags': hashtags,
+      'trendingScore': trendingScore,
     };
   }
 }

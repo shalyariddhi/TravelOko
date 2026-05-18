@@ -1,4 +1,4 @@
-# travel_loco
+# Go-Trivo
 
 A new Flutter project.
 
