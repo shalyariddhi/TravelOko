@@ -59,9 +59,27 @@ class FirebaseService {
       final result = await _auth.signInWithEmailAndPassword(
           email: email, password: password);
       return result.user;
+    } on FirebaseAuthException catch (e) {
+      debugPrint('Sign in error: $e');
+      // Rethrow with a user-friendly message
+      switch (e.code) {
+        case 'user-not-found':
+          throw Exception('No account found with this email.');
+        case 'wrong-password':
+        case 'invalid-credential':
+          throw Exception('Incorrect password. Please try again.');
+        case 'invalid-email':
+          throw Exception('Invalid email format.');
+        case 'user-disabled':
+          throw Exception('This account has been disabled.');
+        case 'too-many-requests':
+          throw Exception('Too many attempts. Please try later.');
+        default:
+          throw Exception(e.message ?? 'Sign in failed.');
+      }
     } catch (e) {
       debugPrint('Sign in error: $e');
-      return null;
+      throw Exception('Sign in failed. Check your connection.');
     }
   }
 
@@ -90,9 +108,21 @@ class FirebaseService {
         });
       }
       return user;
+    } on FirebaseAuthException catch (e) {
+      debugPrint('Sign up error: $e');
+      switch (e.code) {
+        case 'email-already-in-use':
+          throw Exception('An account already exists with this email.');
+        case 'weak-password':
+          throw Exception('Password is too weak. Use at least 6 characters.');
+        case 'invalid-email':
+          throw Exception('Invalid email format.');
+        default:
+          throw Exception(e.message ?? 'Sign up failed.');
+      }
     } catch (e) {
       debugPrint('Sign up error: $e');
-      return null;
+      throw Exception('Sign up failed. Check your connection.');
     }
   }
 
@@ -107,7 +137,9 @@ class FirebaseService {
 
   Future<User?> signInWithGoogle() async {
     try {
-      await _googleSignIn.initialize();
+      await _googleSignIn.initialize(
+        serverClientId: '675905775251-afn5ce9u8jidnv8o59n91m77rq4aopkp.apps.googleusercontent.com',
+      );
 
       final account = await _googleSignIn.authenticate();
 
