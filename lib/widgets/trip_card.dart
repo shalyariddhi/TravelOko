@@ -40,10 +40,10 @@ class _TripCardState extends State<TripCard> {
   }
 
   Color _budgetColor(int budget) {
-    if (budget <= 10000) return Colors.green;
-    if (budget <= 25000) return Colors.lightGreen;
-    if (budget <= 50000) return Colors.orange;
-    return Colors.redAccent;
+    if (budget <= 10000) return const Color(0xFF10B981); // Emerald
+    if (budget <= 25000) return const Color(0xFF34D399); // Mint
+    if (budget <= 50000) return const Color(0xFF6C5DD3); // Purple/Secondary
+    return const Color(0xFFFF5E3A); // Sunset Coral/Primary
   }
 
   int _budgetLevel(int budget) {
@@ -64,13 +64,14 @@ class _TripCardState extends State<TripCard> {
       child: Container(
         margin: const EdgeInsets.only(bottom: 24),
         decoration: BoxDecoration(
-          color: Theme.of(context).cardColor,
+          color: Theme.of(context).cardTheme.color ?? Colors.white,
           borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: const Color(0xFFEFF1F6), width: 1.2),
           boxShadow: [
             BoxShadow(
-              color: Theme.of(context).shadowColor.withValues(alpha: 0.07),
-              blurRadius: 20,
-              offset: const Offset(0, 8),
+              color: Theme.of(context).shadowColor.withValues(alpha: 0.05),
+              blurRadius: 24,
+              offset: const Offset(0, 10),
             ),
           ],
         ),
@@ -82,7 +83,7 @@ class _TripCardState extends State<TripCard> {
               children: [
                 ClipRRect(
                   borderRadius:
-                      const BorderRadius.vertical(top: Radius.circular(24)),
+                      const BorderRadius.vertical(top: Radius.circular(23)),
                   child: CachedNetworkImage(
                     imageUrl: trip.imageUrl,
                     height: 220,
@@ -90,11 +91,11 @@ class _TripCardState extends State<TripCard> {
                     fit: BoxFit.cover,
                     placeholder: (context, url) => Container(
                       height: 220,
-                      color: Theme.of(context).dividerColor,
+                      color: const Color(0xFFEFF1F6),
                     ),
                     errorWidget: (context, url, error) => Container(
                       height: 220,
-                      color: Theme.of(context).dividerColor,
+                      color: const Color(0xFFEFF1F6),
                       child: Icon(Icons.image, size: 60, color: Theme.of(context).textTheme.bodyMedium?.color),
                     ),
                   ),
@@ -103,7 +104,7 @@ class _TripCardState extends State<TripCard> {
                 Positioned.fill(
                   child: ClipRRect(
                     borderRadius:
-                        const BorderRadius.vertical(top: Radius.circular(24)),
+                        const BorderRadius.vertical(top: Radius.circular(23)),
                     child: Container(
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
@@ -155,7 +156,7 @@ class _TripCardState extends State<TripCard> {
                       child: Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.surface,
+                          color: Colors.white,
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 6),
@@ -163,7 +164,7 @@ class _TripCardState extends State<TripCard> {
                         ),
                         child: Icon(
                           widget.isWishlisted ? Icons.favorite : Icons.favorite_border,
-                          color: widget.isWishlisted ? Colors.red : Theme.of(context).disabledColor,
+                          color: widget.isWishlisted ? Colors.red : const Color(0xFF8A99AD),
                           size: 18,
                         ).animate(target: widget.isWishlisted ? 1 : 0).scaleXY(end: 1.2, duration: 200.ms).then().scaleXY(end: 1 / 1.2),
                       ),
@@ -238,9 +239,9 @@ class _TripCardState extends State<TripCard> {
                   // Organizer row
                   Row(
                     children: [
-                        CircleAvatar(
+                      CircleAvatar(
                         radius: 16,
-                        backgroundColor: Theme.of(context).dividerColor,
+                        backgroundColor: const Color(0xFFEFF1F6),
                         backgroundImage:
                             CachedNetworkImageProvider(trip.organizerAvatar),
                         child: Icon(Icons.person, size: 16, color: Theme.of(context).textTheme.bodyMedium?.color),
@@ -273,7 +274,7 @@ class _TripCardState extends State<TripCard> {
                                 '₹${NumberFormat('#,##,###').format(trip.budget)}  •  ${_budgetLabel(trip.budget)}',
                                 style: GoogleFonts.outfit(
                                     fontSize: 13,
-                                    fontWeight: FontWeight.w600,
+                                    fontWeight: FontWeight.bold,
                                     color: Theme.of(context).textTheme.bodyLarge?.color)),
                             const SizedBox(height: 5),
                             Row(
@@ -286,7 +287,7 @@ class _TripCardState extends State<TripCard> {
                                   decoration: BoxDecoration(
                                     color: filled
                                         ? _budgetColor(trip.budget)
-                                        : Theme.of(context).dividerColor,
+                                        : const Color(0xFFEFF1F6),
                                     borderRadius: BorderRadius.circular(3),
                                   ),
                                 );
@@ -303,16 +304,16 @@ class _TripCardState extends State<TripCard> {
                           Text('${trip.seatsLeft} seats left',
                               style: GoogleFonts.outfit(
                                   fontSize: 12,
-                                  fontWeight: FontWeight.w600,
+                                  fontWeight: FontWeight.bold,
                                   color: trip.seatsLeft <= 2
                                       ? Colors.redAccent
-                                      : Theme.of(context).textTheme.bodyMedium?.color)),
+                                      : Theme.of(context).primaryColor)),
                           const SizedBox(height: 5),
                           SizedBox(
                             width: 80,
                             child: LinearProgressIndicator(
                               value: seatsPercent,
-                              backgroundColor: Theme.of(context).dividerColor,
+                              backgroundColor: const Color(0xFFEFF1F6),
                               color: trip.seatsLeft <= 2
                                   ? Colors.redAccent
                                   : Theme.of(context).primaryColor,
@@ -329,21 +330,25 @@ class _TripCardState extends State<TripCard> {
                   Wrap(
                     spacing: 6,
                     runSpacing: 4,
-                    children: trip.tags.map((tag) {
+                    children: trip.tags.asMap().entries.map((entry) {
+                      final idx = entry.key;
+                      final tag = entry.value;
+                      final isEven = idx % 2 == 0;
+                      final color = isEven ? Theme.of(context).primaryColor : Theme.of(context).colorScheme.secondary;
                       return Container(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
-                          color: Theme.of(context).primaryColor.withValues(alpha: 0.10),
+                          color: color.withValues(alpha: 0.08),
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
-                              color: Theme.of(context).primaryColor.withValues(alpha: 0.3)),
+                              color: color.withValues(alpha: 0.2)),
                         ),
                         child: Text(tag,
                             style: GoogleFonts.outfit(
                                 fontSize: 11,
-                                color: Theme.of(context).primaryColor,
-                                fontWeight: FontWeight.w600)),
+                                color: color,
+                                fontWeight: FontWeight.bold)),
                       );
                     }).toList(),
                   ),
@@ -353,9 +358,9 @@ class _TripCardState extends State<TripCard> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                       decoration: BoxDecoration(
-                        color: Colors.blue.withValues(alpha: 0.1),
+                        color: Colors.blue.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
+                        border: Border.all(color: Colors.blue.withValues(alpha: 0.2)),
                       ),
                       child: Row(
                         children: [
@@ -388,13 +393,14 @@ class _TripCardState extends State<TripCard> {
                             },
                       style: ElevatedButton.styleFrom(
                         backgroundColor:
-                            (_hasJoined || widget.isJoined) ? Theme.of(context).dividerColor : Theme.of(context).primaryColor,
+                            (_hasJoined || widget.isJoined) ? const Color(0xFFEFF1F6) : Theme.of(context).primaryColor,
                         foregroundColor:
-                            (_hasJoined || widget.isJoined) ? Theme.of(context).textTheme.bodyMedium?.color : Theme.of(context).colorScheme.onPrimary,
+                            (_hasJoined || widget.isJoined) ? const Color(0xFF8A99AD) : Colors.white,
+                        shadowColor: Theme.of(context).primaryColor.withValues(alpha: 0.35),
+                        elevation: (_hasJoined || widget.isJoined) ? 0 : 8,
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16)),
-                        elevation: 0,
                       ),
                       child: Text(
                         (_hasJoined || widget.isJoined) ? 'Joined ✓' : 'Join Trip',
@@ -406,8 +412,8 @@ class _TripCardState extends State<TripCard> {
                           (_hasJoined || widget.isJoined) ? null : controller.repeat(reverse: true),
                     ).scaleXY(
                       begin: 1.0,
-                      end: 1.02,
-                      duration: 1200.ms,
+                      end: 1.03,
+                      duration: 1000.ms,
                       curve: Curves.easeInOut,
                     ),
                   ),

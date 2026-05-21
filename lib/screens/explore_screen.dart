@@ -151,8 +151,12 @@ class _ExploreScreenState extends State<ExploreScreen>
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               ShaderMask(
-                                shaderCallback: (bounds) => const LinearGradient(
-                                  colors: [Color(0xFFFFD700), Color(0xFFFF8C00), Color(0xFFFF4500)],
+                                shaderCallback: (bounds) => LinearGradient(
+                                  colors: [
+                                    const Color(0xFFFFD700),
+                                    Theme.of(context).primaryColor,
+                                    Theme.of(context).colorScheme.secondary,
+                                  ],
                                 ).createShader(bounds),
                                 child: Text(
                                   widget.showOnlyTrips ? 'Community Trips' : 'Discover India',
@@ -192,7 +196,7 @@ class _ExploreScreenState extends State<ExploreScreen>
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFFFF8C00).withValues(alpha: 0.06),
+                            color: Theme.of(context).primaryColor.withValues(alpha: 0.06),
                             blurRadius: 16,
                             offset: const Offset(0, 4),
                           ),
@@ -259,14 +263,18 @@ class _ExploreScreenState extends State<ExploreScreen>
                               ? Colors.white38
                               : Colors.black38,
                           indicator: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [Color(0xFFFF8C00), Color(0xFF7C3AED)],
+                            gradient: LinearGradient(
+                              colors: [
+                                Theme.of(context).primaryColor,
+                                Theme.of(context).colorScheme.secondary,
+                              ],
                             ),
                             borderRadius: BorderRadius.circular(14),
                             boxShadow: [
                               BoxShadow(
-                                color: const Color(0xFFFF8C00).withValues(alpha: 0.4),
+                                color: Theme.of(context).primaryColor.withValues(alpha: 0.3),
                                 blurRadius: 12,
+                                offset: const Offset(0, 4),
                               )
                             ],
                           ),
@@ -346,25 +354,35 @@ class _ExploreScreenState extends State<ExploreScreen>
                   padding:
                       const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   decoration: BoxDecoration(
-                    color: selected ? Colors.amber : Colors.white,
+                    color: selected
+                        ? Theme.of(context).primaryColor
+                        : Theme.of(context).cardTheme.color ?? Colors.white,
                     borderRadius: BorderRadius.circular(22),
+                    border: Border.all(
+                      color: selected
+                          ? Theme.of(context).primaryColor
+                          : const Color(0xFFEFF1F6),
+                      width: 1.2,
+                    ),
                     boxShadow: selected
                         ? [
                             BoxShadow(
-                              color: Colors.amber.withValues(alpha: 0.4),
-                              blurRadius: 8,
-                              offset: const Offset(0, 3),
+                              color: Theme.of(context).primaryColor.withValues(alpha: 0.25),
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
                             )
                           ]
                         : [],
                   ),
                   child: Text(
                     '${_categories[index]['icon']} ${_categories[index]['label']}',
-                    style: GoogleFonts.poppins(
+                    style: GoogleFonts.outfit(
                       fontSize: 13,
                       fontWeight:
                           selected ? FontWeight.bold : FontWeight.w500,
-                      color: selected ? Colors.white : Colors.grey[700],
+                      color: selected
+                          ? Colors.white
+                          : Theme.of(context).textTheme.bodyMedium?.color,
                     ),
                   ),
                 ),
@@ -381,7 +399,7 @@ class _ExploreScreenState extends State<ExploreScreen>
       pinned: true,
       delegate: _FilterHeaderDelegate(
         child: Container(
-          color: const Color(0xFFF6F7F9),
+          color: Theme.of(context).scaffoldBackgroundColor,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: SingleChildScrollView(
             scrollDirection: Axis.horizontal,
@@ -401,23 +419,25 @@ class _ExploreScreenState extends State<ExploreScreen>
                 const SizedBox(width: 8),
                 if (_userGender.toLowerCase() == 'female')
                   FilterChip(
-                  label: Text('Girliees',
-                      style: GoogleFonts.poppins(
+                  label: Text('Girliees 👩',
+                      style: GoogleFonts.outfit(
                           fontSize: 12,
+                          fontWeight: FontWeight.bold,
                           color: _onlyGirls
                               ? Colors.pink[700]
-                              : Colors.grey[700])),
+                              : Theme.of(context).textTheme.bodyMedium?.color)),
                   selected: _onlyGirls,
                   onSelected: (v) => setState(() => _onlyGirls = v),
-                  selectedColor: Colors.pink[100],
+                  selectedColor: Colors.pink.withValues(alpha: 0.12),
                   checkmarkColor: Colors.pink,
-                  backgroundColor: Colors.white,
+                  backgroundColor: Theme.of(context).cardTheme.color ?? Colors.white,
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20),
                       side: BorderSide(
                           color: _onlyGirls
                               ? Colors.pink
-                              : Colors.grey[300]!)),
+                              : const Color(0xFFEFF1F6),
+                          width: 1.2)),
                 ),
               ],
             ),
@@ -432,14 +452,14 @@ class _ExploreScreenState extends State<ExploreScreen>
       required IconData icon,
       required VoidCallback onTap}) {
     return ActionChip(
-      avatar: Icon(icon, size: 14, color: Colors.amber[700]),
+      avatar: Icon(icon, size: 14, color: Theme.of(context).primaryColor),
       label: Text(label,
-          style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey[700])),
+          style: GoogleFonts.outfit(fontSize: 12, color: Theme.of(context).textTheme.bodyMedium?.color, fontWeight: FontWeight.w600)),
       onPressed: onTap,
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).cardTheme.color ?? Colors.white,
       shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
-          side: BorderSide(color: Colors.grey[300]!)),
+          side: const BorderSide(color: Color(0xFFEFF1F6), width: 1.2)),
     );
   }
 
@@ -598,26 +618,27 @@ class _ExploreScreenState extends State<ExploreScreen>
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 12,
-              offset: const Offset(0, 4)),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            // Avatar
-            Container(
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: Colors.amber, width: 2.5),
-              ),
-              child: ClipOval(
+          color: Theme.of(context).cardTheme.color ?? Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: const Color(0xFFEFF1F6), width: 1.2),
+          boxShadow: [
+            BoxShadow(
+                color: Theme.of(context).shadowColor.withValues(alpha: 0.04),
+                blurRadius: 16,
+                offset: const Offset(0, 6)),
+          ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              // Avatar
+              Container(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Theme.of(context).primaryColor, width: 2),
+                ),
+                child: ClipOval(
                 child: Image.network(
                   avatarUrl,
                   width: 56,
@@ -758,6 +779,7 @@ class _ExploreScreenState extends State<ExploreScreen>
     int temp = _maxBudget;
     showModalBottomSheet(
       context: context,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (_) => StatefulBuilder(builder: (ctx, setModal) {
@@ -765,21 +787,22 @@ class _ExploreScreenState extends State<ExploreScreen>
           padding: const EdgeInsets.all(24),
           child: Column(mainAxisSize: MainAxisSize.min, children: [
             Text('Max Budget',
-                style: GoogleFonts.poppins(
-                    fontSize: 18, fontWeight: FontWeight.bold)),
+                style: GoogleFonts.outfit(
+                    fontSize: 18, fontWeight: FontWeight.w900, color: Theme.of(context).textTheme.bodyLarge?.color)),
             const SizedBox(height: 8),
             Text(
                 temp == 100000 ? 'Any' : '₹${temp.toString()}',
-                style: GoogleFonts.poppins(
+                style: GoogleFonts.outfit(
                     fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.amber)),
+                    fontWeight: FontWeight.w900,
+                    color: Theme.of(context).primaryColor)),
             Slider(
               value: temp.toDouble(),
               min: 5000,
               max: 100000,
               divisions: 19,
-              activeColor: Colors.amber,
+              activeColor: Theme.of(context).primaryColor,
+              inactiveColor: const Color(0xFFEFF1F6),
               onChanged: (v) => setModal(() => temp = v.toInt()),
             ),
             ElevatedButton(
@@ -788,13 +811,14 @@ class _ExploreScreenState extends State<ExploreScreen>
                 Navigator.pop(ctx);
               },
               style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.amber,
+                  backgroundColor: Theme.of(context).primaryColor,
+                  foregroundColor: Colors.white,
                   minimumSize: const Size(double.infinity, 48),
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14))),
               child: Text('Apply',
-                  style: GoogleFonts.poppins(
-                      fontWeight: FontWeight.bold, color: Colors.black87)),
+                  style: GoogleFonts.outfit(
+                      fontWeight: FontWeight.bold)),
             ),
           ]),
         );
@@ -806,6 +830,7 @@ class _ExploreScreenState extends State<ExploreScreen>
     int temp = _maxDuration;
     showModalBottomSheet(
       context: context,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (_) => StatefulBuilder(builder: (ctx, setModal) {
@@ -813,21 +838,22 @@ class _ExploreScreenState extends State<ExploreScreen>
           padding: const EdgeInsets.all(24),
           child: Column(mainAxisSize: MainAxisSize.min, children: [
             Text('Max Duration',
-                style: GoogleFonts.poppins(
-                    fontSize: 18, fontWeight: FontWeight.bold)),
+                style: GoogleFonts.outfit(
+                    fontSize: 18, fontWeight: FontWeight.w900, color: Theme.of(context).textTheme.bodyLarge?.color)),
             const SizedBox(height: 8),
             Text(
                 temp == 30 ? 'Any' : '$temp Days',
-                style: GoogleFonts.poppins(
+                style: GoogleFonts.outfit(
                     fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.amber)),
+                    fontWeight: FontWeight.w900,
+                    color: Theme.of(context).primaryColor)),
             Slider(
               value: temp.toDouble(),
               min: 1,
               max: 30,
               divisions: 29,
-              activeColor: Colors.amber,
+              activeColor: Theme.of(context).primaryColor,
+              inactiveColor: const Color(0xFFEFF1F6),
               onChanged: (v) => setModal(() => temp = v.toInt()),
             ),
             ElevatedButton(
@@ -836,13 +862,14 @@ class _ExploreScreenState extends State<ExploreScreen>
                 Navigator.pop(ctx);
               },
               style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.amber,
+                  backgroundColor: Theme.of(context).primaryColor,
+                  foregroundColor: Colors.white,
                   minimumSize: const Size(double.infinity, 48),
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14))),
               child: Text('Apply',
-                  style: GoogleFonts.poppins(
-                      fontWeight: FontWeight.bold, color: Colors.black87)),
+                  style: GoogleFonts.outfit(
+                      fontWeight: FontWeight.bold)),
             ),
           ]),
         );

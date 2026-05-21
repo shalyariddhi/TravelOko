@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -571,36 +571,35 @@ class _LoginScreenState extends State<LoginScreen> {
     bool obscure = false,
     VoidCallback? onToggleObscure,
   }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
-      ),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(14),
       child: TextField(
         controller: controller,
         obscureText: obscure,
-        style: GoogleFonts.poppins(color: Colors.white),
+        style: GoogleFonts.poppins(color: Colors.white, fontSize: 14),
+        cursorColor: Colors.amber,
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle:
-              GoogleFonts.poppins(color: Colors.white38, fontSize: 14),
-          prefixIcon: Icon(icon, color: Colors.white38, size: 20),
+          hintStyle: GoogleFonts.poppins(color: Colors.white54, fontSize: 14),
+          prefixIcon: Icon(icon, color: Colors.white54, size: 20),
           suffixIcon: isPassword
               ? IconButton(
                   icon: Icon(
                     obscure
                         ? Icons.visibility_outlined
                         : Icons.visibility_off_outlined,
-                    color: Colors.white38,
+                    color: Colors.white54,
                     size: 20,
                   ),
                   onPressed: onToggleObscure,
                 )
               : null,
           border: InputBorder.none,
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          enabledBorder: InputBorder.none,
+          focusedBorder: InputBorder.none,
+          filled: true,
+          fillColor: Colors.white.withValues(alpha: 0.12),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         ),
       ),
     );

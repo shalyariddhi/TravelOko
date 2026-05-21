@@ -263,20 +263,21 @@ class _IdentificationScreenState extends State<IdentificationScreen> {
   }
 
   Widget _buildTextField(TextEditingController controller, String hint, IconData icon) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
-      ),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
       child: TextField(
         controller: controller,
-        style: GoogleFonts.poppins(color: Colors.white),
+        style: GoogleFonts.poppins(color: Colors.white, fontSize: 14),
+        cursorColor: Colors.amber,
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: GoogleFonts.poppins(color: Colors.white38, fontSize: 14),
+          hintStyle: GoogleFonts.poppins(color: Colors.white54, fontSize: 14),
           prefixIcon: Icon(icon, color: Colors.white54, size: 20),
           border: InputBorder.none,
+          enabledBorder: InputBorder.none,
+          focusedBorder: InputBorder.none,
+          filled: true,
+          fillColor: Colors.white.withValues(alpha: 0.1),
           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         ),
       ),

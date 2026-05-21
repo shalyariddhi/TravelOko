@@ -47,8 +47,8 @@ class _MyTripsScreenState extends State<MyTripsScreen>
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         elevation: 0,
         title: ShaderMask(
-          shaderCallback: (bounds) => const LinearGradient(
-            colors: [Color(0xFFFFD700), Color(0xFFFF8C00)],
+          shaderCallback: (bounds) => LinearGradient(
+            colors: [Theme.of(context).primaryColor, Theme.of(context).colorScheme.secondary],
           ).createShader(bounds),
           child: Text('My Trips',
               style: GoogleFonts.outfit(
@@ -61,13 +61,13 @@ class _MyTripsScreenState extends State<MyTripsScreen>
           Container(
             margin: const EdgeInsets.only(right: 12),
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFFFF8C00), Color(0xFF7C3AED)],
+              gradient: LinearGradient(
+                colors: [Theme.of(context).primaryColor, Theme.of(context).colorScheme.secondary],
               ),
               borderRadius: BorderRadius.circular(14),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFFFF8C00).withValues(alpha: 0.4),
+                  color: Theme.of(context).primaryColor.withValues(alpha: 0.35),
                   blurRadius: 12,
                   offset: const Offset(0, 4),
                 ),
@@ -95,13 +95,13 @@ class _MyTripsScreenState extends State<MyTripsScreen>
               labelColor: Colors.white,
               unselectedLabelColor: isDark ? Colors.white38 : Colors.black38,
               indicator: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFFFF8C00), Color(0xFFFF4500)],
+                gradient: LinearGradient(
+                  colors: [Theme.of(context).primaryColor, Theme.of(context).colorScheme.secondary],
                 ),
                 borderRadius: BorderRadius.circular(14),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFFFF8C00).withValues(alpha: 0.4),
+                    color: Theme.of(context).primaryColor.withValues(alpha: 0.3),
                     blurRadius: 10,
                   ),
                 ],
@@ -144,7 +144,7 @@ class _MyTripsScreenState extends State<MyTripsScreen>
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
-          title: Text('New Shared Trip', style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+          title: Text('New Shared Trip', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -158,7 +158,11 @@ class _MyTripsScreenState extends State<MyTripsScreen>
             ],
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              style: TextButton.styleFrom(foregroundColor: Theme.of(context).colorScheme.secondary),
+              child: const Text('Cancel'),
+            ),
             ElevatedButton(
               onPressed: isCreating ? null : () async {
                 final title = titleController.text.trim();
@@ -179,8 +183,13 @@ class _MyTripsScreenState extends State<MyTripsScreen>
                   ));
                 }
               },
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.amber, foregroundColor: Colors.black),
-              child: isCreating ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : const Text('Create'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).primaryColor,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              ),
+              child: isCreating ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Text('Create'),
             ),
           ],
         ),
@@ -284,13 +293,14 @@ class _MyTripsScreenState extends State<MyTripsScreen>
                 );
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.amber,
-                foregroundColor: Colors.black87,
+                backgroundColor: Theme.of(context).primaryColor,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14)),
+                    borderRadius: BorderRadius.circular(16)),
               ),
               child: Text('Create a Trip',
-                  style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+                  style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
             ),
           );
         }
@@ -410,10 +420,14 @@ class _MyTripsScreenState extends State<MyTripsScreen>
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(color: const Color(0xFFEFF1F6), width: 1.2),
                   boxShadow: [
-                    BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 4)),
+                    BoxShadow(
+                      color: const Color(0xFF0F172A).withValues(alpha: 0.04),
+                      blurRadius: 16,
+                      offset: const Offset(0, 6),
+                    ),
                   ],
                 ),
                 child: Row(
@@ -421,39 +435,39 @@ class _MyTripsScreenState extends State<MyTripsScreen>
                     Container(
                       width: 60, height: 60,
                       decoration: BoxDecoration(
-                        color: Colors.amber.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(12),
+                        color: Theme.of(context).primaryColor.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(16),
                       ),
-                      child: const Icon(Icons.flight_takeoff, color: Colors.amber, size: 28),
+                      child: Icon(Icons.flight_takeoff_rounded, color: Theme.of(context).primaryColor, size: 28),
                     ),
                     const SizedBox(width: 16),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(destination, style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 16)),
+                          Text(destination, style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16, color: const Color(0xFF0F172A))),
                           const SizedBox(height: 4),
-                          Text('$days Days • $style', style: GoogleFonts.poppins(color: Colors.grey[600], fontSize: 13)),
+                          Text('$days Days • $style', style: GoogleFonts.outfit(color: const Color(0xFF5C6F84), fontSize: 13)),
                           const SizedBox(height: 8),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                             decoration: BoxDecoration(
-                              color: status == 'pending' ? Colors.orange[50] : Colors.green[50],
-                              borderRadius: BorderRadius.circular(6),
+                              color: status == 'pending' ? const Color(0xFFFEF3C7) : const Color(0xFFD1FAE5),
+                              borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
                               status.toUpperCase(),
-                              style: GoogleFonts.poppins(
+                              style: GoogleFonts.outfit(
                                 fontSize: 10, 
-                                fontWeight: FontWeight.bold, 
-                                color: status == 'pending' ? Colors.orange[800] : Colors.green[800]
+                                fontWeight: FontWeight.w800, 
+                                color: status == 'pending' ? const Color(0xFFD97706) : const Color(0xFF059669)
                               ),
                             ),
                           ),
                         ],
                       ),
                     ),
-                    const Icon(Icons.chevron_right, color: Colors.grey),
+                    const Icon(Icons.chevron_right_rounded, color: Color(0xFF8A99AD)),
                   ],
                 ),
               ),
@@ -475,7 +489,7 @@ class _MyTripsScreenState extends State<MyTripsScreen>
         final stays = snapshot.data ?? [];
         if (stays.isEmpty) {
           return _buildEmptyState(
-            icon: Icons.hotel,
+            icon: Icons.hotel_rounded,
             title: 'No Booked Stays',
             subtitle: 'Explore accommodations and book your perfect stay!',
           );
@@ -499,15 +513,20 @@ class _MyTripsScreenState extends State<MyTripsScreen>
                 margin: const EdgeInsets.only(bottom: 16),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(color: const Color(0xFFEFF1F6), width: 1.2),
                   boxShadow: [
-                    BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 4)),
+                    BoxShadow(
+                      color: const Color(0xFF0F172A).withValues(alpha: 0.04),
+                      blurRadius: 16,
+                      offset: const Offset(0, 6),
+                    ),
                   ],
                 ),
                 child: Row(
                   children: [
                     ClipRRect(
-                      borderRadius: const BorderRadius.horizontal(left: Radius.circular(16)),
+                      borderRadius: const BorderRadius.horizontal(left: Radius.circular(24)),
                       child: Image.network(
                         stay['image'] ?? 'https://via.placeholder.com/100',
                         width: 100,
@@ -520,19 +539,19 @@ class _MyTripsScreenState extends State<MyTripsScreen>
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(stay['name'] ?? 'Accommodation', style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 16)),
+                          Text(stay['name'] ?? 'Accommodation', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16, color: const Color(0xFF0F172A))),
                           const SizedBox(height: 4),
-                          Text(stay['location'] ?? 'Location', style: GoogleFonts.poppins(color: Colors.grey[600], fontSize: 13)),
+                          Text(stay['location'] ?? 'Location', style: GoogleFonts.outfit(color: const Color(0xFF5C6F84), fontSize: 13)),
                           const SizedBox(height: 8),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                             decoration: BoxDecoration(
-                              color: Colors.green[50],
-                              borderRadius: BorderRadius.circular(6),
+                              color: const Color(0xFFD1FAE5),
+                              borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
                               'CONFIRMED',
-                              style: GoogleFonts.poppins(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.green[800]),
+                              style: GoogleFonts.outfit(fontSize: 10, fontWeight: FontWeight.w800, color: const Color(0xFF059669)),
                             ),
                           ),
                         ],
@@ -561,22 +580,22 @@ class _MyTripsScreenState extends State<MyTripsScreen>
           Container(
             padding: const EdgeInsets.all(28),
             decoration: BoxDecoration(
-              color: Colors.amber.withValues(alpha: 0.1),
+              color: Theme.of(context).primaryColor.withValues(alpha: 0.08),
               shape: BoxShape.circle,
             ),
-            child: Icon(icon, size: 64, color: Colors.amber[600]),
+            child: Icon(icon, size: 64, color: Theme.of(context).primaryColor),
           ),
           const SizedBox(height: 20),
           Text(title,
-              style: GoogleFonts.poppins(
-                  fontSize: 18, fontWeight: FontWeight.bold)),
+              style: GoogleFonts.outfit(
+                  fontSize: 18, fontWeight: FontWeight.bold, color: const Color(0xFF0F172A))),
           const SizedBox(height: 8),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 40),
             child: Text(subtitle,
                 textAlign: TextAlign.center,
-                style: GoogleFonts.poppins(
-                    fontSize: 14, color: Colors.grey[600])),
+                style: GoogleFonts.outfit(
+                    fontSize: 14, color: const Color(0xFF5C6F84))),
           ),
           if (action != null) ...[
             const SizedBox(height: 24),

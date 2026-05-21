@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -97,57 +98,75 @@ class _HomeScreenState extends State<HomeScreen> {
       expandedHeight: 130,
       floating: true,
       pinned: false,
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: Colors.transparent,
       elevation: 0,
       flexibleSpace: FlexibleSpaceBar(
-        background: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Theme.of(context).colorScheme.surface, Theme.of(context).scaffoldBackgroundColor],
-            ),
-          ),
-          padding: const EdgeInsets.fromLTRB(20, 48, 20, 12),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.end,
+        background: ClipRect(
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Theme.of(context).colorScheme.surface.withValues(alpha: 0.8),
+                    Theme.of(context).scaffoldBackgroundColor.withValues(alpha: 0.8),
+                  ],
+                ),
+                border: Border(
+                  bottom: BorderSide(
+                    color: Theme.of(context).dividerTheme.color ?? const Color(0xFFEFF1F6),
+                    width: 1,
+                  ),
+                ),
+              ),
+              padding: const EdgeInsets.fromLTRB(20, 48, 20, 12),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  ShaderMask(
-                    shaderCallback: (bounds) => const LinearGradient(
-                      colors: [Color(0xFFFFD700), Color(0xFFFF8C00), Color(0xFFFF4500)],
-                    ).createShader(bounds),
-                    child: Text('GO-Trivo',
-                        style: GoogleFonts.outfit(
-                            fontSize: 32, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: -0.5)),
-                  ),
-                  Text('Discover • Plan • Explore',
-                      style: GoogleFonts.outfit(
-                          fontSize: 12, color: Theme.of(context).primaryColor.withValues(alpha: 0.8), fontWeight: FontWeight.w600, letterSpacing: 1.5)),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      ShaderMask(
+                        shaderCallback: (bounds) => LinearGradient(
+                          colors: [
+                            const Color(0xFFFFD700), // Gold
+                            Theme.of(context).primaryColor, // Sunset Coral
+                            Theme.of(context).colorScheme.secondary, // Mystic Indigo
+                          ],
+                        ).createShader(bounds),
+                        child: Text('GO-Trivo',
+                            style: GoogleFonts.outfit(
+                                fontSize: 32, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: -0.5)),
+                      ),
+                      Text('Discover • Plan • Explore',
+                          style: GoogleFonts.outfit(
+                              fontSize: 12, color: Theme.of(context).primaryColor.withValues(alpha: 0.8), fontWeight: FontWeight.w600, letterSpacing: 1.5)),
+                    ],
+                  ).animate().fadeIn(duration: 500.ms).slideY(begin: -0.2),
+                  if (_currentUserData != null)
+                    Container(
+                      padding: const EdgeInsets.all(2.5),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: LinearGradient(
+                          colors: [Theme.of(context).primaryColor, const Color(0xFFFF6B9D)],
+                        ),
+                      ),
+                      child: CircleAvatar(
+                        radius: 22,
+                        backgroundImage: NetworkImage((_currentUserData!.photoUrl.isNotEmpty && !_currentUserData!.photoUrl.contains('pravatar'))
+                            ? _currentUserData!.photoUrl
+                            : 'https://api.dicebear.com/9.x/avataaars/png?seed=${_currentUserData!.uid}'),
+                        onBackgroundImageError: (e, s) {},
+                      ),
+                    ).animate().fadeIn(duration: 500.ms, delay: 100.ms),
                 ],
-              ).animate().fadeIn(duration: 500.ms).slideY(begin: -0.2),
-              if (_currentUserData != null)
-                Container(
-                  padding: const EdgeInsets.all(2.5),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: LinearGradient(
-                      colors: [Theme.of(context).primaryColor, const Color(0xFFFF6B9D)],
-                    ),
-                  ),
-                  child: CircleAvatar(
-                    radius: 22,
-                    backgroundImage: NetworkImage((_currentUserData!.photoUrl.isNotEmpty && !_currentUserData!.photoUrl.contains('pravatar'))
-                        ? _currentUserData!.photoUrl
-                        : 'https://api.dicebear.com/9.x/avataaars/png?seed=${_currentUserData!.uid}'),
-                    onBackgroundImageError: (e, s) {},
-                  ),
-                ).animate().fadeIn(duration: 500.ms, delay: 100.ms),
-            ],
+              ),
+            ),
           ),
         ),
       ),
@@ -356,10 +375,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFFF8C00).withValues(alpha: 0.12),
+                          color: Theme.of(context).primaryColor.withValues(alpha: 0.08),
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
-                            color: const Color(0xFFFF8C00).withValues(alpha: 0.3),
+                            color: Theme.of(context).primaryColor.withValues(alpha: 0.2),
                           ),
                         ),
                         child: Row(
@@ -368,10 +387,10 @@ class _HomeScreenState extends State<HomeScreen> {
                                 style: GoogleFonts.outfit(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w600,
-                                    color: const Color(0xFFFF8C00))),
+                                    color: Theme.of(context).primaryColor)),
                             const SizedBox(width: 4),
-                            const Icon(Icons.arrow_forward_ios_rounded,
-                                size: 11, color: Color(0xFFFF8C00)),
+                            Icon(Icons.arrow_forward_ios_rounded,
+                                size: 11, color: Theme.of(context).primaryColor),
                           ],
                         ),
                       ),
@@ -402,7 +421,15 @@ class _HomeScreenState extends State<HomeScreen> {
                         margin: const EdgeInsets.symmetric(horizontal: 5),
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(24),
-                          color: const Color(0xFF1A1A2E),
+                          color: Theme.of(context).cardTheme.color ?? Colors.white,
+                          border: Border.all(color: const Color(0xFFEFF1F6), width: 1.2),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Theme.of(context).shadowColor.withValues(alpha: 0.04),
+                              blurRadius: 16,
+                              offset: const Offset(0, 8),
+                            ),
+                          ],
                           image: (location['image'] != null &&
                                   (location['image'] as String).isNotEmpty)
                               ? DecorationImage(
@@ -415,25 +442,26 @@ class _HomeScreenState extends State<HomeScreen> {
                         child: Stack(
                           children: [
                             // Gradient overlay
-                            Positioned.fill(
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(24),
-                                  gradient: LinearGradient(
-                                    begin: Alignment.topCenter,
-                                    end: Alignment.bottomCenter,
-                                    colors: [
-                                      Colors.transparent,
-                                      Colors.black.withValues(alpha: 0.75),
-                                    ],
-                                    stops: const [0.35, 1.0],
+                            if (location['image'] != null && (location['image'] as String).isNotEmpty)
+                              Positioned.fill(
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(24),
+                                    gradient: LinearGradient(
+                                      begin: Alignment.topCenter,
+                                      end: Alignment.bottomCenter,
+                                      colors: [
+                                        Colors.transparent,
+                                        Colors.black.withValues(alpha: 0.75),
+                                      ],
+                                      stops: const [0.35, 1.0],
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
                             if (location['image'] == null || (location['image'] as String).isEmpty)
-                              const Center(
-                                child: Icon(Icons.location_city_rounded, color: Colors.white54, size: 36),
+                              Center(
+                                child: Icon(Icons.location_city_rounded, color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.5) ?? Colors.black38, size: 36),
                               ),
                             // Name at bottom
                             Positioned(
@@ -443,7 +471,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               child: Text(
                                 location['name'] ?? 'Unknown',
                                 style: GoogleFonts.outfit(
-                                    color: Colors.white,
+                                    color: (location['image'] != null && (location['image'] as String).isNotEmpty) ? Colors.white : Theme.of(context).textTheme.bodyLarge?.color,
                                     fontWeight: FontWeight.w800,
                                     fontSize: 14),
                                 maxLines: 2,
